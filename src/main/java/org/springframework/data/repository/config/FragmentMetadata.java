@@ -18,9 +18,12 @@ package org.springframework.data.repository.config;
 import lombok.RequiredArgsConstructor;
 
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.stream.Stream;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.BeanDefinitionStoreException;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.core.type.ClassMetadata;
@@ -38,6 +41,8 @@ import org.springframework.util.Assert;
 @RequiredArgsConstructor
 public class FragmentMetadata {
 
+	private static final String CLASS_LOADING_ERROR = "Could not load type %s.";
+	private static final Logger LOGGER = LoggerFactory.getLogger(FragmentMetadata.class);
 	private final MetadataReaderFactory factory;
 
 	/**
@@ -49,9 +54,16 @@ public class FragmentMetadata {
 	public Stream<String> getFragmentInterfaces(String interfaceName) {
 
 		Assert.hasText(interfaceName, "Interface name must not be null or empty!");
-
-		return Arrays.stream(getClassMetadata(interfaceName).getInterfaceNames()) //
-				.filter(this::isCandidate);
+		
+		String[] interfaceNames = getClassMetadata(interfaceName).getInterfaceNames();
+		//search for inherited interfaces
+		Set<String> data = new HashSet<String>();
+		
+		for (String in : interfaceNames) {
+			data.addAll(lookUpHierarchy(in));
+		}
+		
+		return data.stream().filter(this::isCandidate);
 	}
 
 	/**
@@ -85,6 +97,41 @@ public class FragmentMetadata {
 			return factory.getMetadataReader(className).getClassMetadata();
 		} catch (IOException e) {
 			throw new BeanDefinitionStoreException(String.format("Cannot parse %s metadata.", className), e);
+		}
+	}
+	
+	private Set<String> lookUpHierarchy(String cls) {
+		if (cls == null || cls.equals(Object.class.getName()))
+			throw new IllegalArgumentException("Invalid parameters in lookUpHierarchy invocation");
+		Set<String> interfacesSet = new HashSet<String>();
+		interfacesSet.add(cls);
+		Class<?> ic = null;
+		try {
+			ic = Class.forName(cls);
+		} catch (ClassNotFoundException e) {
+			LOGGER.warn(String.format(CLASS_LOADING_ERROR, cls), e);
+		}
+		for (final Class<?> clazz : ic.getInterfaces()) {
+			String clazzName = clazz.getName();
+			if (!interfacesSet.contains(clazzName)) {
+				interfacesSet.add(clazzName);
+				lookUpHierarchy(clazz, interfacesSet);
+			}
+		}
+		return interfacesSet;
+	}
+	
+	private void lookUpHierarchy(Class<?> cls, Set<String> interfacesSet) {
+		if (cls == null || cls.getName().equals(Object.class.getName()) || interfacesSet == null) {
+			throw new IllegalArgumentException("Invalid parameters in lookUpHierarchy invocation");
+		}
+
+		for (final Class<?> clazz : cls.getInterfaces()) {
+			String clazzName = clazz.getName();
+			if (!interfacesSet.contains(clazzName)) {
+				interfacesSet.add(clazzName);
+				lookUpHierarchy(clazz, interfacesSet);
+			}
 		}
 	}
 }

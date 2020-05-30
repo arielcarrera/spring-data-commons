@@ -64,14 +64,14 @@ public abstract class CdiRepositoryBean<T> implements Bean<T>, PassivationCapabl
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(CdiRepositoryBean.class);
 	private static final CdiRepositoryConfiguration DEFAULT_CONFIGURATION = DefaultCdiRepositoryConfiguration.INSTANCE;
+	
+	protected final Set<Annotation> qualifiers;
+	protected final Class<T> repositoryType;
+	protected final CdiRepositoryContext context;
+	protected final BeanManager beanManager;
+	protected final String passivationId;
 
-	private final Set<Annotation> qualifiers;
-	private final Class<T> repositoryType;
-	private final CdiRepositoryContext context;
-	private final BeanManager beanManager;
-	private final String passivationId;
-
-	private transient @Nullable T repoInstance;
+	protected transient @Nullable T repoInstance;
 
 	/**
 	 * Creates a new {@link CdiRepositoryBean}.
@@ -406,13 +406,39 @@ public abstract class CdiRepositoryBean<T> implements Bean<T>, PassivationCapabl
 
 	private static Class<?> lookupFragmentInterface(Class<?> repositoryType, String interfaceName) {
 
-		return Arrays.stream(repositoryType.getInterfaces()) //
-				.filter(it -> it.getName().equals(interfaceName)) //
-				.findFirst() //
-				.orElseThrow(() -> new IllegalArgumentException(String.format("Did not find type %s in %s!", interfaceName,
-						Arrays.asList(repositoryType.getInterfaces()))));
+		Set<Class<?>> data = new HashSet<Class<?>>();
+		data.addAll(lookUpHierarchy(repositoryType));
+		return data.stream()
+			.filter(it -> it.getName().equals(interfaceName)) //
+			.findFirst() //
+			.orElseThrow(() -> new IllegalArgumentException(String.format("Did not find type %s in %s!", interfaceName,
+				Arrays.asList(repositoryType.getInterfaces()))));				
 	}
 
+	private static Set<Class<?>> lookUpHierarchy(Class<?> cls) {
+		if(cls == null || cls.equals(Object.class)) throw new IllegalArgumentException("Invalid parameters in lookUpHierarchy invocation");
+		Set<Class<?>> interfacesSet = new HashSet<Class<?>>();
+		
+        for (final Class<?> clazz : cls.getInterfaces()) {
+        	if (!interfacesSet.contains(clazz)) {
+        		interfacesSet.add(clazz);
+        		lookUpHierarchy(clazz, interfacesSet);
+        	}
+        }
+        return interfacesSet;
+	}
+	
+	private static void lookUpHierarchy(Class<?> cls, Set<Class<?>> interfacesSet) {
+		if(cls == null || cls.equals(Object.class) || interfacesSet == null) throw new IllegalArgumentException("Invalid parameters in lookUpHierarchy invocation");
+		
+        for (final Class<?> clazz : cls.getInterfaces()) {
+        	if (!interfacesSet.contains(clazz)) {
+            	interfacesSet.add(clazz);
+            	lookUpHierarchy(clazz, interfacesSet);
+        	}
+        }
+	}
+	
 	/**
 	 * Creates the actual component instance.
 	 *
