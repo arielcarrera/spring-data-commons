@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package org.springframework.data.convert;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import java.text.DateFormat;
 import java.text.Format;
@@ -24,20 +25,26 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Map;
+import java.util.function.Predicate;
 
 import org.joda.time.DateTime;
-import org.junit.Test;
-
+import org.junit.jupiter.api.Test;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.converter.ConverterFactory;
+import org.springframework.core.convert.converter.ConverterRegistry;
+import org.springframework.core.convert.converter.GenericConverter.ConvertiblePair;
 import org.springframework.core.convert.support.ConfigurableConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.convert.ConverterBuilder.ConverterAware;
+import org.springframework.data.convert.CustomConversions.ConverterConfiguration;
 import org.springframework.data.convert.CustomConversions.StoreConversions;
+import org.springframework.data.convert.Jsr310Converters.LocalDateTimeToDateConverter;
+import org.springframework.data.convert.ThreeTenBackPortConverters.LocalDateTimeToJavaTimeInstantConverter;
+import org.springframework.data.geo.Point;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
-
 import org.threeten.bp.LocalDateTime;
 
 /**
@@ -48,10 +55,19 @@ import org.threeten.bp.LocalDateTime;
  * @author Mark Paluch
  * @since 2.0
  */
-public class CustomConversionsUnitTests {
+class CustomConversionsUnitTests {
+
+	static final SimpleTypeHolder DATE_EXCLUDING_SIMPLE_TYPE_HOLDER = new SimpleTypeHolder(
+			Collections.singleton(Date.class), true) {
+
+		@Override
+		public boolean isSimpleType(Class<?> type) {
+			return type.getName().startsWith("java.time") ? false : super.isSimpleType(type);
+		}
+	};
 
 	@Test // DATACMNS-1035
-	public void findsBasicReadAndWriteConversions() {
+	void findsBasicReadAndWriteConversions() {
 
 		CustomConversions conversions = new CustomConversions(StoreConversions.NONE,
 				Arrays.asList(FormatToStringConverter.INSTANCE, StringToFormatConverter.INSTANCE));
@@ -64,7 +80,7 @@ public class CustomConversionsUnitTests {
 	}
 
 	@Test // DATACMNS-1035
-	public void considersSubtypesCorrectly() {
+	void considersSubtypesCorrectly() {
 
 		CustomConversions conversions = new CustomConversions(StoreConversions.NONE,
 				Arrays.asList(NumberToStringConverter.INSTANCE, StringToNumberConverter.INSTANCE));
@@ -74,7 +90,7 @@ public class CustomConversionsUnitTests {
 	}
 
 	@Test // DATACMNS-1101
-	public void considersSubtypeCachingCorrectly() {
+	void considersSubtypeCachingCorrectly() {
 
 		CustomConversions conversions = new CustomConversions(StoreConversions.NONE,
 				Arrays.asList(NumberToStringConverter.INSTANCE, StringToNumberConverter.INSTANCE));
@@ -85,7 +101,7 @@ public class CustomConversionsUnitTests {
 	}
 
 	@Test // DATACMNS-1035
-	public void populatesConversionServiceCorrectly() {
+	void populatesConversionServiceCorrectly() {
 
 		GenericConversionService conversionService = new DefaultConversionService();
 
@@ -97,7 +113,7 @@ public class CustomConversionsUnitTests {
 	}
 
 	@Test // DATAMONGO-259, DATACMNS-1035
-	public void doesNotConsiderTypeSimpleIfOnlyReadConverterIsRegistered() {
+	void doesNotConsiderTypeSimpleIfOnlyReadConverterIsRegistered() {
 
 		CustomConversions conversions = new CustomConversions(StoreConversions.NONE,
 				Arrays.asList(StringToFormatConverter.INSTANCE));
@@ -105,7 +121,7 @@ public class CustomConversionsUnitTests {
 	}
 
 	@Test // DATAMONGO-298, DATACMNS-1035
-	public void discoversConvertersForSubtypesOfMongoTypes() {
+	void discoversConvertersForSubtypesOfMongoTypes() {
 
 		CustomConversions conversions = new CustomConversions(StoreConversions.NONE,
 				Arrays.asList(StringToIntegerConverter.INSTANCE));
@@ -114,7 +130,7 @@ public class CustomConversionsUnitTests {
 	}
 
 	@Test // DATAMONGO-795, DATACMNS-1035
-	public void favorsCustomConverterForIndeterminedTargetType() {
+	void favorsCustomConverterForIndeterminedTargetType() {
 
 		CustomConversions conversions = new CustomConversions(StoreConversions.NONE,
 				Arrays.asList(DateTimeToStringConverter.INSTANCE));
@@ -122,7 +138,7 @@ public class CustomConversionsUnitTests {
 	}
 
 	@Test // DATAMONGO-881, DATACMNS-1035
-	public void customConverterOverridesDefault() {
+	void customConverterOverridesDefault() {
 
 		CustomConversions conversions = new CustomConversions(StoreConversions.NONE,
 				Arrays.asList(CustomDateTimeConverter.INSTANCE));
@@ -133,7 +149,7 @@ public class CustomConversionsUnitTests {
 	}
 
 	@Test // DATAMONGO-1001, DATACMNS-1035
-	public void shouldSelectPropertCustomWriteTargetForCglibProxiedType() {
+	void shouldSelectPropertCustomWriteTargetForCglibProxiedType() {
 
 		CustomConversions conversions = new CustomConversions(StoreConversions.NONE,
 				Arrays.asList(FormatToStringConverter.INSTANCE));
@@ -141,7 +157,7 @@ public class CustomConversionsUnitTests {
 	}
 
 	@Test // DATAMONGO-1001, DATACMNS-1035
-	public void shouldSelectPropertCustomReadTargetForCglibProxiedType() {
+	void shouldSelectPropertCustomReadTargetForCglibProxiedType() {
 
 		CustomConversions conversions = new CustomConversions(StoreConversions.NONE,
 				Arrays.asList(CustomObjectToStringConverter.INSTANCE));
@@ -149,7 +165,7 @@ public class CustomConversionsUnitTests {
 	}
 
 	@Test // DATAMONGO-1131, DATACMNS-1035
-	public void registersConvertersForJsr310() {
+	void registersConvertersForJsr310() {
 
 		CustomConversions customConversions = new CustomConversions(StoreConversions.NONE, Collections.emptyList());
 
@@ -157,7 +173,7 @@ public class CustomConversionsUnitTests {
 	}
 
 	@Test // DATAMONGO-1131, DATACMNS-1035
-	public void registersConvertersForThreeTenBackPort() {
+	void registersConvertersForThreeTenBackPort() {
 
 		CustomConversions customConversions = new CustomConversions(StoreConversions.NONE, Collections.emptyList());
 
@@ -165,7 +181,7 @@ public class CustomConversionsUnitTests {
 	}
 
 	@Test // DATAMONGO-1302, DATACMNS-1035
-	public void registersConverterFactoryCorrectly() {
+	void registersConverterFactoryCorrectly() {
 
 		StoreConversions conversions = StoreConversions.of(new SimpleTypeHolder(Collections.singleton(Format.class), true));
 
@@ -176,7 +192,7 @@ public class CustomConversionsUnitTests {
 	}
 
 	@Test // DATACMNS-1034
-	public void registersConverterFromConverterAware() {
+	void registersConverterFromConverterAware() {
 
 		ConverterAware converters = ConverterBuilder //
 				.reading(Locale.class, CustomType.class, left -> new CustomType()) //
@@ -192,6 +208,68 @@ public class CustomConversionsUnitTests {
 
 		assertThat(conversionService.canConvert(CustomType.class, Locale.class)).isTrue();
 		assertThat(conversionService.canConvert(Locale.class, CustomType.class)).isTrue();
+	}
+
+	@Test // DATACMNS-1615
+	void skipsUnsupportedDefaultWritingConverter() {
+
+		ConverterRegistry registry = mock(ConverterRegistry.class);
+
+		new CustomConversions(StoreConversions.of(DATE_EXCLUDING_SIMPLE_TYPE_HOLDER), Collections.emptyList())
+				.registerConvertersIn(registry);
+
+		verify(registry, never()).addConverter(any(LocalDateTimeToJavaTimeInstantConverter.class));
+	}
+
+	@Test // DATACMNS-1665
+	void registersStoreConverter() {
+
+		ConverterRegistry registry = mock(ConverterRegistry.class);
+
+		SimpleTypeHolder holder = new SimpleTypeHolder(Collections.emptySet(), true);
+
+		CustomConversions conversions = new CustomConversions(StoreConversions.of(holder, PointToMapConverter.INSTANCE),
+				Collections.emptyList());
+		conversions.registerConvertersIn(registry);
+
+		assertThat(conversions.isSimpleType(Point.class));
+		verify(registry).addConverter(any(PointToMapConverter.class));
+	}
+
+	@Test // DATACMNS-1615
+	void doesNotSkipUnsupportedUserConverter() {
+
+		ConverterRegistry registry = mock(ConverterRegistry.class);
+
+		new CustomConversions(StoreConversions.of(DATE_EXCLUDING_SIMPLE_TYPE_HOLDER),
+				Collections.singletonList(LocalDateTimeToJavaTimeInstantConverter.INSTANCE)).registerConvertersIn(registry);
+
+		verify(registry).addConverter(any(LocalDateTimeToJavaTimeInstantConverter.class));
+	}
+
+	@Test // DATACMNS-1615
+	void skipsConverterBasedOnConfiguration() {
+
+		ConverterRegistry registry = mock(ConverterRegistry.class);
+
+		ConverterConfiguration config = new ConverterConfiguration(StoreConversions.NONE, Collections.emptyList(),
+				Predicate.<ConvertiblePair> isEqual(new ConvertiblePair(java.time.LocalDateTime.class, Date.class)).negate());
+		new CustomConversions(config).registerConvertersIn(registry);
+
+		verify(registry, never()).addConverter(any(LocalDateTimeToDateConverter.class));
+	}
+
+	@Test // DATACMNS-1615
+	void doesNotSkipUserConverterConverterEvenWhenConfigurationWouldNotAllowIt() {
+
+		ConverterRegistry registry = mock(ConverterRegistry.class);
+
+		ConverterConfiguration config = new ConverterConfiguration(StoreConversions.NONE,
+				Collections.singletonList(LocalDateTimeToDateConverter.INSTANCE),
+				Predicate.<ConvertiblePair> isEqual(new ConvertiblePair(java.time.LocalDateTime.class, Date.class)).negate());
+		new CustomConversions(config).registerConvertersIn(registry);
+
+		verify(registry).addConverter(any(LocalDateTimeToDateConverter.class));
 	}
 
 	private static Class<?> createProxyTypeFor(Class<?> type) {
@@ -280,6 +358,18 @@ public class CustomConversionsUnitTests {
 	}
 
 	@WritingConverter
+	enum PointToMapConverter implements Converter<Point, Map<String, String>> {
+
+		INSTANCE;
+
+		@Override
+		public Map<String, String> convert(Point source) {
+			return source != null ? Collections.emptyMap() : null;
+		}
+
+	}
+
+	@WritingConverter
 	static class FormatConverterFactory implements ConverterFactory<String, Format> {
 
 		@Override
@@ -291,7 +381,7 @@ public class CustomConversionsUnitTests {
 
 			private final Class<T> targetType;
 
-			public StringToFormat(Class<T> targetType) {
+			StringToFormat(Class<T> targetType) {
 				this.targetType = targetType;
 			}
 

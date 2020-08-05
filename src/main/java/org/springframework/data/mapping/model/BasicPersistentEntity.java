@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -278,9 +278,7 @@ public class BasicPersistentEntity<T, P extends PersistentProperty<P>> implement
 
 		Assert.notNull(association, "Association must not be null!");
 
-		if (!associations.contains(association)) {
-			associations.add(association);
-		}
+		associations.add(association);
 	}
 
 	/*
@@ -453,6 +451,15 @@ public class BasicPersistentEntity<T, P extends PersistentProperty<P>> implement
 		verifyBeanType(bean);
 
 		return propertyAccessorFactory.getPropertyAccessor(this, bean);
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mapping.PersistentEntity#getPropertyPathAccessor(java.lang.Object)
+	 */
+	@Override
+	public <B> PersistentPropertyPathAccessor<B> getPropertyPathAccessor(B bean) {
+		return new SimplePersistentPropertyPathAccessor<>(getPropertyAccessor(bean));
 	}
 
 	/*

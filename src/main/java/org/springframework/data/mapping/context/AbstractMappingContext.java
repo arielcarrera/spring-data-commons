@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,13 +41,17 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
+import org.springframework.core.KotlinDetector;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.PersistentPropertyPath;
 import org.springframework.data.mapping.PersistentPropertyPaths;
 import org.springframework.data.mapping.PropertyPath;
+import org.springframework.data.mapping.model.BeanWrapperPropertyAccessorFactory;
 import org.springframework.data.mapping.model.ClassGeneratingPropertyAccessorFactory;
+import org.springframework.data.mapping.model.EntityInstantiators;
+import org.springframework.data.mapping.model.InstantiationAwarePropertyAccessorFactory;
 import org.springframework.data.mapping.model.MutablePersistentEntity;
 import org.springframework.data.mapping.model.PersistentPropertyAccessorFactory;
 import org.springframework.data.mapping.model.Property;
@@ -55,6 +59,7 @@ import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.data.spel.ExtensionAwareEvaluationContextProvider;
 import org.springframework.data.util.ClassTypeInformation;
+import org.springframework.data.util.KotlinReflectionUtils;
 import org.springframework.data.util.Optionals;
 import org.springframework.data.util.Streamable;
 import org.springframework.data.util.TypeInformation;
@@ -85,9 +90,11 @@ import org.springframework.util.ReflectionUtils.FieldFilter;
 public abstract class AbstractMappingContext<E extends MutablePersistentEntity<?, P>, P extends PersistentProperty<P>>
 		implements MappingContext<E, P>, ApplicationEventPublisherAware, ApplicationContextAware, InitializingBean {
 
+	private static final boolean IN_NATIVE_IMAGE = System.getProperty("org.graalvm.nativeimage.imagecode") != null;
+
 	private final Optional<E> NONE = Optional.empty();
 	private final Map<TypeInformation<?>, Optional<E>> persistentEntities = new HashMap<>();
-	private final PersistentPropertyAccessorFactory persistentPropertyAccessorFactory = new ClassGeneratingPropertyAccessorFactory();
+	private final PersistentPropertyAccessorFactory persistentPropertyAccessorFactory;
 	private final PersistentPropertyPathFactory<E, P> persistentPropertyPathFactory;
 
 	private @Nullable ApplicationEventPublisher applicationEventPublisher;
@@ -102,7 +109,15 @@ public abstract class AbstractMappingContext<E extends MutablePersistentEntity<?
 	private final Lock write = lock.writeLock();
 
 	protected AbstractMappingContext() {
+
 		this.persistentPropertyPathFactory = new PersistentPropertyPathFactory<>(this);
+
+		EntityInstantiators instantiators = new EntityInstantiators();
+		PersistentPropertyAccessorFactory accessorFactory = IN_NATIVE_IMAGE ? BeanWrapperPropertyAccessorFactory.INSTANCE
+				: new ClassGeneratingPropertyAccessorFactory();
+
+		this.persistentPropertyAccessorFactory = new InstantiationAwarePropertyAccessorFactory(accessorFactory,
+				instantiators);
 	}
 
 	/*
@@ -468,8 +483,7 @@ public abstract class AbstractMappingContext<E extends MutablePersistentEntity<?
 			return false;
 		}
 
-		return !org.springframework.data.util.ReflectionUtils.isKotlinClass(type.getType())
-				|| org.springframework.data.util.ReflectionUtils.isSupportedKotlinClass(type.getType());
+		return !KotlinDetector.isKotlinType(type.getType()) || KotlinReflectionUtils.isSupportedKotlinClass(type.getType());
 	}
 
 	/**

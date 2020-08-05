@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package org.springframework.data.mapping;
 
 import java.util.Optional;
+import java.util.function.Predicate;
 
 import org.springframework.data.util.Streamable;
 
@@ -51,4 +52,14 @@ public interface PersistentPropertyPaths<T, P extends PersistentProperty<P>>
 	 * @return
 	 */
 	boolean contains(PropertyPath path);
+
+	/**
+	 * Drops {@link PersistentPropertyPath}s that contain a path segment matching the given predicate.
+	 *
+	 * @param predicate must not be {@literal null}.
+	 * @return a {@link PersistentPropertyPaths} instance with all {@link PersistentPropertyPath} instances removed that
+	 *         contain path segments matching the given predicate.
+	 * @since 2.1.4 / 2.2.2
+	 */
+	PersistentPropertyPaths<T, P> dropPathIfSegmentMatches(Predicate<? super P> predicate);
 }

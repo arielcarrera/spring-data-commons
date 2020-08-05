@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import org.springframework.data.repository.Repository;
 /**
  * @author Mark Paluch
  */
-public interface ComposedRepository
+interface ComposedRepository
 		extends Repository<Object, Serializable>, FragmentInterface, AnotherFragmentInterface {
 
 	// duplicate method shadowed by AnotherFragmentInterfaceImpl. The legacy custom implementation comes last, after all

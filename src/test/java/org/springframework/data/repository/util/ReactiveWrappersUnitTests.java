@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,31 +15,36 @@
  */
 package org.springframework.data.repository.util;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
 
 import io.reactivex.Completable;
 import io.reactivex.Flowable;
-import org.junit.Test;
-import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import rx.Observable;
 import rx.Single;
 
+import java.util.concurrent.CompletableFuture;
+
+import org.junit.jupiter.api.Test;
+import org.reactivestreams.Publisher;
+
 /**
  * Unit tests for {@link ReactiveWrappers}.
  *
  * @author Mark Paluch
+ * @author Gerrit Meier
  */
-public class ReactiveWrappersUnitTests {
+class ReactiveWrappersUnitTests {
 
-	@Test // DATACMNS-836
-	public void isSingleLikeShouldReportCorrectNoTypes() {
+	@Test // DATACMNS-836, DATACMNS-1753
+	void isSingleLikeShouldReportCorrectNoTypes() {
 
 		assertThat(ReactiveWrappers.isNoValueType(Mono.class)).isFalse();
 		assertThat(ReactiveWrappers.isNoValueType(Flux.class)).isFalse();
 		assertThat(ReactiveWrappers.isNoValueType(Single.class)).isFalse();
 		assertThat(ReactiveWrappers.isNoValueType(Completable.class)).isTrue();
+		assertThat(ReactiveWrappers.isNoValueType(CompletableFuture.class)).isFalse();
 		assertThat(ReactiveWrappers.isNoValueType(Observable.class)).isFalse();
 		assertThat(ReactiveWrappers.isNoValueType(Publisher.class)).isFalse();
 		assertThat(ReactiveWrappers.isNoValueType(io.reactivex.Single.class)).isFalse();
@@ -48,13 +53,14 @@ public class ReactiveWrappersUnitTests {
 		assertThat(ReactiveWrappers.isNoValueType(io.reactivex.Observable.class)).isFalse();
 	}
 
-	@Test // DATACMNS-836
-	public void isSingleLikeShouldReportCorrectSingleTypes() {
+	@Test // DATACMNS-836, DATACMNS-1753
+	void isSingleLikeShouldReportCorrectSingleTypes() {
 
 		assertThat(ReactiveWrappers.isSingleValueType(Mono.class)).isTrue();
 		assertThat(ReactiveWrappers.isSingleValueType(Flux.class)).isFalse();
 		assertThat(ReactiveWrappers.isSingleValueType(Single.class)).isTrue();
 		assertThat(ReactiveWrappers.isSingleValueType(Completable.class)).isFalse();
+		assertThat(ReactiveWrappers.isSingleValueType(CompletableFuture.class)).isFalse();
 		assertThat(ReactiveWrappers.isSingleValueType(Observable.class)).isFalse();
 		assertThat(ReactiveWrappers.isSingleValueType(Publisher.class)).isFalse();
 		assertThat(ReactiveWrappers.isSingleValueType(io.reactivex.Single.class)).isTrue();
@@ -64,13 +70,14 @@ public class ReactiveWrappersUnitTests {
 		assertThat(ReactiveWrappers.isSingleValueType(io.reactivex.Observable.class)).isFalse();
 	}
 
-	@Test // DATACMNS-836
-	public void isCollectionLikeShouldReportCorrectCollectionTypes() {
+	@Test // DATACMNS-836, DATACMNS-1753
+	void isCollectionLikeShouldReportCorrectCollectionTypes() {
 
 		assertThat(ReactiveWrappers.isMultiValueType(Mono.class)).isFalse();
 		assertThat(ReactiveWrappers.isMultiValueType(Flux.class)).isTrue();
 		assertThat(ReactiveWrappers.isMultiValueType(Single.class)).isFalse();
 		assertThat(ReactiveWrappers.isSingleValueType(Completable.class)).isFalse();
+		assertThat(ReactiveWrappers.isSingleValueType(CompletableFuture.class)).isFalse();
 		assertThat(ReactiveWrappers.isMultiValueType(Observable.class)).isTrue();
 		assertThat(ReactiveWrappers.isMultiValueType(Publisher.class)).isTrue();
 		assertThat(ReactiveWrappers.isMultiValueType(io.reactivex.Single.class)).isFalse();

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,10 @@ package org.springframework.data.repository.core.support;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
+import org.springframework.core.KotlinDetector;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.CrudMethods;
@@ -27,6 +29,7 @@ import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.util.QueryExecutionConverters;
 import org.springframework.data.repository.util.ReactiveWrappers;
 import org.springframework.data.util.ClassTypeInformation;
+import org.springframework.data.util.KotlinReflectionUtils;
 import org.springframework.data.util.Lazy;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
@@ -37,6 +40,7 @@ import org.springframework.util.Assert;
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Jens Schauder
+ * @author Mark Paluch
  */
 public abstract class AbstractRepositoryMetadata implements RepositoryMetadata {
 
@@ -76,10 +80,32 @@ public abstract class AbstractRepositoryMetadata implements RepositoryMetadata {
 
 	/*
 	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.core.RepositoryMetadata#getReturnType(java.lang.reflect.Method)
+	 */
+	@Override
+	public TypeInformation<?> getReturnType(Method method) {
+
+		TypeInformation<?> returnType = null;
+		if (KotlinDetector.isKotlinType(method.getDeclaringClass()) && KotlinReflectionUtils.isSuspend(method)) {
+
+			// the last parameter is Continuation<? super T> or Continuation<? super Flow<? super T>>
+			List<TypeInformation<?>> types = typeInformation.getParameterTypes(method);
+			returnType = types.get(types.size() - 1).getComponentType();
+		}
+
+		if (returnType == null) {
+			returnType = typeInformation.getReturnType(method);
+		}
+
+		return returnType;
+	}
+
+	/*
+	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.core.RepositoryMetadata#getReturnedDomainClass(java.lang.reflect.Method)
 	 */
 	public Class<?> getReturnedDomainClass(Method method) {
-		return QueryExecutionConverters.unwrapWrapperTypes(typeInformation.getReturnType(method)).getType();
+		return QueryExecutionConverters.unwrapWrapperTypes(getReturnType(method)).getType();
 	}
 
 	/*

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,11 +21,12 @@ import static org.mockito.Mockito.*;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.beans.factory.NoUniqueBeanDefinitionException;
 import org.springframework.data.querydsl.EntityPathResolver;
@@ -37,13 +38,13 @@ import org.springframework.data.querydsl.SimpleEntityPathResolver;
  * @author Oliver Gierke
  * @soundtrack Dave Matthews Band - Shotgun (DMB Live 25)
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class BeanLookupUnitTests {
 
 	@Mock ListableBeanFactory beanFactory;
 	Map<String, EntityPathResolver> beans;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
 		this.beans = new HashMap<>();

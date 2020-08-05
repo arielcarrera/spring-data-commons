@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,10 +20,11 @@ import static org.mockito.Mockito.*;
 
 import java.lang.annotation.Annotation;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.core.type.AnnotationMetadata;
@@ -38,13 +39,13 @@ import org.springframework.data.auditing.EnableAuditing;
  * @author Oliver Gierke
  * @author Francisco Soler
  */
-@RunWith(MockitoJUnitRunner.class)
-public class AuditingBeanDefinitionRegistrarSupportUnitTests {
+@ExtendWith(MockitoExtension.class)
+class AuditingBeanDefinitionRegistrarSupportUnitTests {
 
 	@Mock BeanDefinitionRegistry registry;
 
 	@Test // DATCMNS-389
-	public void testRegisterBeanDefinitions() {
+	void testRegisterBeanDefinitions() {
 
 		AuditingBeanDefinitionRegistrarSupport registrar = new DummyAuditingBeanDefinitionRegistrarSupport();
 		AnnotationMetadata metadata = new StandardAnnotationMetadata(SampleConfig.class);
@@ -54,7 +55,7 @@ public class AuditingBeanDefinitionRegistrarSupportUnitTests {
 	}
 
 	@Test // DATACMNS-1453
-	public void rejectsNullAnnotationMetadata() {
+	void rejectsNullAnnotationMetadata() {
 
 		AuditingBeanDefinitionRegistrarSupport registrar = new DummyAuditingBeanDefinitionRegistrarSupport();
 
@@ -63,7 +64,7 @@ public class AuditingBeanDefinitionRegistrarSupportUnitTests {
 	}
 
 	@Test // DATACMNS-1453
-	public void rejectsNullRegistry() {
+	void rejectsNullRegistry() {
 
 		AuditingBeanDefinitionRegistrarSupport registrar = new DummyAuditingBeanDefinitionRegistrarSupport();
 		AnnotationMetadata metadata = new StandardAnnotationMetadata(SampleConfig.class);

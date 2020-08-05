@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -65,7 +65,6 @@ public class SpringDataWebConfiguration implements WebMvcConfigurer, BeanClassLo
 
 	private @Autowired Optional<PageableHandlerMethodArgumentResolverCustomizer> pageableResolverCustomizer;
 	private @Autowired Optional<SortHandlerMethodArgumentResolverCustomizer> sortResolverCustomizer;
-	private @Autowired Optional<XmlBeamHttpMessageConverter> xmlBeamHttpMessageConverter;
 
 	public SpringDataWebConfiguration(ApplicationContext context,
 			@Qualifier("mvcConversionService") ObjectFactory<ConversionService> conversionService) {
@@ -168,7 +167,9 @@ public class SpringDataWebConfiguration implements WebMvcConfigurer, BeanClassLo
 		}
 
 		if (ClassUtils.isPresent("org.xmlbeam.XBProjector", context.getClassLoader())) {
-			converters.add(0, xmlBeamHttpMessageConverter.orElseGet(() -> new XmlBeamHttpMessageConverter()));
+
+			converters.add(0, context.getBeanProvider(XmlBeamHttpMessageConverter.class) //
+					.getIfAvailable(() -> new XmlBeamHttpMessageConverter()));
 		}
 	}
 

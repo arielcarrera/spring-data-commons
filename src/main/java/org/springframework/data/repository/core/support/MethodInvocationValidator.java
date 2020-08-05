@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 the original author or authors.
+ * Copyright 2017-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -111,13 +111,13 @@ public class MethodInvocationValidator implements MethodInterceptor {
 
 		boolean nullableReturn;
 		boolean[] nullableParameters;
-		MethodParameter methodParameters[];
+		MethodParameter[] methodParameters;
 
 		static Nullability of(Method method, ParameterNameDiscoverer discoverer) {
 
 			boolean nullableReturn = isNullableParameter(new MethodParameter(method, -1));
 			boolean[] nullableParameters = new boolean[method.getParameterCount()];
-			MethodParameter methodParameters[] = new MethodParameter[method.getParameterCount()];
+			MethodParameter[] methodParameters = new MethodParameter[method.getParameterCount()];
 
 			for (int i = 0; i < method.getParameterCount(); i++) {
 

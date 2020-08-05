@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the original author or authors.
+ * Copyright 2019-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,6 +43,7 @@ import org.springframework.util.comparator.Comparators;
 /**
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Myeonghyeon Lee
  * @since 2.2
  */
 class EntityCallbackDiscoverer {
@@ -272,7 +273,7 @@ class EntityCallbackDiscoverer {
 
 	/**
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see org.springframework.beans.factory.BeanClassLoaderAware
 	 */
 	public void setBeanClassLoader(ClassLoader classLoader) {
@@ -307,7 +308,7 @@ class EntityCallbackDiscoverer {
 
 		Collection<Method> methods = new ArrayList<>(1);
 
-		ReflectionUtils.doWithMethods(callbackType, mc -> methods.add(mc), method -> {
+		ReflectionUtils.doWithMethods(callbackType, methods::add, method -> {
 
 			if (!Modifier.isPublic(method.getModifiers()) || method.getParameterCount() != args.length + 1
 					|| method.isBridge() || ReflectionUtils.isObjectMethod(method)) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2019 the original author or authors.
+ * Copyright 2015-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.util.ReflectionTestUtils.*;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.aop.Advisor;
 import org.springframework.aop.framework.Advised;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
@@ -33,10 +33,10 @@ import org.springframework.transaction.interceptor.TransactionInterceptor;
  * @author Oliver Gierke
  * @soundtrack The Intersphere - Live in Mannheim
  */
-public class TransactionRepositoryFactoryBeanSupportUnitTests {
+class TransactionRepositoryFactoryBeanSupportUnitTests {
 
 	@Test // DATACMNS-656
-	public void disablesDefaultTransactionsIfConfigured() {
+	void disablesDefaultTransactionsIfConfigured() {
 
 		SampleTransactionalRepositoryFactoryBean factoryBean = new SampleTransactionalRepositoryFactoryBean();
 		factoryBean.setEnableDefaultTransactions(false);
@@ -64,7 +64,7 @@ public class TransactionRepositoryFactoryBeanSupportUnitTests {
 	}
 
 	@Test // DATACMNS-880
-	public void propagatesBeanFactoryToSuperClass() {
+	void propagatesBeanFactoryToSuperClass() {
 
 		SampleTransactionalRepositoryFactoryBean factoryBean = new SampleTransactionalRepositoryFactoryBean();
 		factoryBean.setBeanFactory(new DefaultListableBeanFactory());
@@ -79,7 +79,7 @@ public class TransactionRepositoryFactoryBeanSupportUnitTests {
 
 		private final CrudRepository<Object, Long> repository = mock(CrudRepository.class);
 
-		public SampleTransactionalRepositoryFactoryBean() {
+		SampleTransactionalRepositoryFactoryBean() {
 			super((Class) CrudRepository.class);
 		}
 

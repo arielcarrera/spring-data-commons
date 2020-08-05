@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -289,6 +289,15 @@ public interface PersistentEntity<T, P extends PersistentProperty<P>> extends It
 	<B> PersistentPropertyAccessor<B> getPropertyAccessor(B bean);
 
 	/**
+	 * Returns a {@link PersistentPropertyPathAccessor} to access property values of the given bean.
+	 *
+	 * @param bean must not be {@literal null}.
+	 * @return a new {@link PersistentPropertyPathAccessor}
+	 * @since 2.3
+	 */
+	<B> PersistentPropertyPathAccessor<B> getPropertyPathAccessor(B bean);
+
+	/**
 	 * Returns the {@link IdentifierAccessor} for the given bean.
 	 *
 	 * @param bean must not be {@literal null}.
@@ -299,7 +308,7 @@ public interface PersistentEntity<T, P extends PersistentProperty<P>> extends It
 
 	/**
 	 * Returns whether the given bean is considered new according to the static metadata.
-	 * 
+	 *
 	 * @param bean must not be {@literal null}.
 	 * @throws IllegalArgumentException in case the given bean is not an instance of the typ represented by the
 	 *           {@link PersistentEntity}.
@@ -310,7 +319,7 @@ public interface PersistentEntity<T, P extends PersistentProperty<P>> extends It
 	/**
 	 * Returns whether the entity is considered immutable, i.e. clients shouldn't attempt to change instances via the
 	 * {@link PersistentPropertyAccessor} obtained via {@link #getPropertyAccessor(Object)}.
-	 * 
+	 *
 	 * @return
 	 * @see Immutable
 	 * @since 2.1
@@ -320,7 +329,7 @@ public interface PersistentEntity<T, P extends PersistentProperty<P>> extends It
 	/**
 	 * Returns whether the entity needs properties to be populated, i.e. if any property exists that's not initialized by
 	 * the constructor.
-	 * 
+	 *
 	 * @return
 	 * @since 2.1
 	 */

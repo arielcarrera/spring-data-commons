@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,6 +45,7 @@ import org.springframework.asm.MethodVisitor;
 import org.springframework.asm.Opcodes;
 import org.springframework.asm.Type;
 import org.springframework.cglib.core.ReflectUtils;
+import org.springframework.core.KotlinDetector;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
@@ -1444,7 +1445,7 @@ public class ClassGeneratingPropertyAccessorFactory implements PersistentPropert
 
 		Class<?> type = property.getOwner().getType();
 
-		if (isAccessible(type) && org.springframework.data.util.ReflectionUtils.isKotlinClass(type)) {
+		if (isAccessible(type) && KotlinDetector.isKotlinType(type)) {
 			return KotlinCopyMethod.findCopyMethod(type).filter(it -> it.supportsProperty(property)).isPresent();
 		}
 

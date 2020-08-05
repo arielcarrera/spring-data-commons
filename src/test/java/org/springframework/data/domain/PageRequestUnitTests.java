@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2019 the original author or authors.
+ * Copyright 2008-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -18,7 +18,7 @@ package org.springframework.data.domain;
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.domain.UnitTestUtils.*;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Sort.Direction;
 
 /**
@@ -26,7 +26,7 @@ import org.springframework.data.domain.Sort.Direction;
  *
  * @author Oliver Gierke
  */
-public class PageRequestUnitTests extends AbstractPageRequestUnitTests {
+class PageRequestUnitTests extends AbstractPageRequestUnitTests {
 
 	/*
 	 * (non-Javadoc)
@@ -37,12 +37,12 @@ public class PageRequestUnitTests extends AbstractPageRequestUnitTests {
 		return PageRequest.of(page, size);
 	}
 
-	public AbstractPageRequest newPageRequest(int page, int size, Sort sort) {
+	AbstractPageRequest newPageRequest(int page, int size, Sort sort) {
 		return PageRequest.of(page, size, sort);
 	}
 
 	@Test
-	public void equalsRegardsSortCorrectly() {
+	void equalsRegardsSortCorrectly() {
 
 		Sort sort = Sort.by(Direction.DESC, "foo");
 		AbstractPageRequest request = PageRequest.of(0, 10, sort);
@@ -64,7 +64,7 @@ public class PageRequestUnitTests extends AbstractPageRequestUnitTests {
 	}
 
 	@Test // DATACMNS-1581
-	public void rejectsNullSort() {
+	void rejectsNullSort() {
 
 		assertThatExceptionOfType(IllegalArgumentException.class) //
 				.isThrownBy(() -> PageRequest.of(0, 10, null));

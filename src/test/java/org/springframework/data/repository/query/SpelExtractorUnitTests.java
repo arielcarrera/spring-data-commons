@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import java.util.function.BiFunction;
 
 import org.assertj.core.api.SoftAssertions;
 import org.assertj.core.groups.Tuple;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.data.repository.query.SpelQueryContext.SpelExtractor;
 
 /**
@@ -33,7 +33,7 @@ import org.springframework.data.repository.query.SpelQueryContext.SpelExtractor;
  * @author Jens Schauder
  * @author Oliver Gierke
  */
-public class SpelExtractorUnitTests {
+class SpelExtractorUnitTests {
 
 	static final BiFunction<Integer, String, String> PARAMETER_NAME_SOURCE = (index, spel) -> "EPP" + index;
 	static final BiFunction<String, String, String> REPLACEMENT_SOURCE = (prefix, name) -> prefix + name;
@@ -41,7 +41,7 @@ public class SpelExtractorUnitTests {
 	final SoftAssertions softly = new SoftAssertions();
 
 	@Test // DATACMNS-1258
-	public void nullQueryThrowsException() {
+	void nullQueryThrowsException() {
 
 		SpelQueryContext context = SpelQueryContext.of(PARAMETER_NAME_SOURCE, REPLACEMENT_SOURCE);
 
@@ -49,7 +49,7 @@ public class SpelExtractorUnitTests {
 	}
 
 	@Test // DATACMNS-1258
-	public void emptyStringGetsParsedCorrectly() {
+	void emptyStringGetsParsedCorrectly() {
 
 		SpelQueryContext context = SpelQueryContext.of(PARAMETER_NAME_SOURCE, REPLACEMENT_SOURCE);
 		SpelExtractor extractor = context.parse("");
@@ -61,7 +61,7 @@ public class SpelExtractorUnitTests {
 	}
 
 	@Test // DATACMNS-1258
-	public void findsAndReplacesExpressions() {
+	void findsAndReplacesExpressions() {
 
 		SpelQueryContext context = SpelQueryContext.of(PARAMETER_NAME_SOURCE, REPLACEMENT_SOURCE);
 		SpelExtractor extractor = context.parse(":#{one} ?#{two}");
@@ -78,7 +78,7 @@ public class SpelExtractorUnitTests {
 	}
 
 	@Test // DATACMNS-1258
-	public void keepsStringWhenNoMatchIsFound() {
+	void keepsStringWhenNoMatchIsFound() {
 
 		SpelQueryContext context = SpelQueryContext.of(PARAMETER_NAME_SOURCE, REPLACEMENT_SOURCE);
 		SpelExtractor extractor = context.parse("abcdef");
@@ -90,7 +90,7 @@ public class SpelExtractorUnitTests {
 	}
 
 	@Test // DATACMNS-1258
-	public void spelsInQuotesGetIgnored() {
+	void spelsInQuotesGetIgnored() {
 
 		List<String> queries = Arrays.asList(//
 				"a'b:#{one}cd'ef", //

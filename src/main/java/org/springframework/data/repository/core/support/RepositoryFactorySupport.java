@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2019 the original author or authors.
+ * Copyright 2008-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -43,7 +42,6 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
-import org.springframework.core.ResolvableType;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.projection.DefaultMethodInvokingMethodInterceptor;
@@ -64,7 +62,6 @@ import org.springframework.data.repository.util.ClassUtils;
 import org.springframework.data.repository.util.QueryExecutionConverters;
 import org.springframework.data.repository.util.ReactiveWrapperConverters;
 import org.springframework.data.repository.util.ReactiveWrappers;
-import org.springframework.data.util.Pair;
 import org.springframework.data.util.ReflectionUtils;
 import org.springframework.lang.Nullable;
 import org.springframework.transaction.interceptor.TransactionalProxy;
@@ -74,7 +71,7 @@ import org.springframework.util.ConcurrentReferenceHashMap.ReferenceType;
 
 /**
  * Factory bean to create instances of a given repository interface. Creates a proxy implementing the configured
- * repository interface and apply an advice handing the control to the {@code QueryExecuterMethodInterceptor}. Query
+ * repository interface and apply an advice handing the control to the {@code QueryExecutorMethodInterceptor}. Query
  * detection strategy can be configured by setting {@link QueryLookupStrategy.Key}.
  *
  * @author Oliver Gierke
@@ -85,35 +82,35 @@ import org.springframework.util.ConcurrentReferenceHashMap.ReferenceType;
 @Slf4j
 public abstract class RepositoryFactorySupport implements BeanClassLoaderAware, BeanFactoryAware {
 
-	private static final BiFunction<Method, Object[], Object[]> REACTIVE_ARGS_CONVERTER = (method, o) -> {
+	private static final BiFunction<Method, Object[], Object[]> REACTIVE_ARGS_CONVERTER = (method, args) -> {
 
 		if (ReactiveWrappers.isAvailable()) {
 
 			Class<?>[] parameterTypes = method.getParameterTypes();
 
-			Object[] converted = new Object[o.length];
-			for (int i = 0; i < parameterTypes.length; i++) {
+			Object[] converted = new Object[args.length];
+			for (int i = 0; i < args.length; i++) {
 
-				Class<?> parameterType = parameterTypes[i];
-				Object value = o[i];
+				Object value = args[i];
+				Object convertedArg = value;
 
-				if (value == null) {
-					continue;
+				Class<?> parameterType = parameterTypes.length > i ? parameterTypes[i] : null;
+
+				if (value != null && parameterType != null) {
+					if (!parameterType.isAssignableFrom(value.getClass())
+							&& ReactiveWrapperConverters.canConvert(value.getClass(), parameterType)) {
+
+						convertedArg = ReactiveWrapperConverters.toWrapper(value, parameterType);
+					}
 				}
 
-				if (!parameterType.isAssignableFrom(value.getClass())
-						&& ReactiveWrapperConverters.canConvert(value.getClass(), parameterType)) {
-
-					converted[i] = ReactiveWrapperConverters.toWrapper(value, parameterType);
-				} else {
-					converted[i] = value;
-				}
+				converted[i] = convertedArg;
 			}
 
 			return converted;
 		}
 
-		return o;
+		return args;
 	};
 
 	final static GenericConversionService CONVERSION_SERVICE = new DefaultConversionService();
@@ -329,7 +326,10 @@ public abstract class RepositoryFactorySupport implements BeanClassLoaderAware, 
 		}
 
 		ProjectionFactory projectionFactory = getProjectionFactory(classLoader, beanFactory);
-		result.addAdvice(new QueryExecutorMethodInterceptor(information, projectionFactory));
+		Optional<QueryLookupStrategy> queryLookupStrategy = getQueryLookupStrategy(queryLookupStrategyKey,
+				evaluationContextProvider);
+		result.addAdvice(new QueryExecutorMethodInterceptor(information, projectionFactory, queryLookupStrategy,
+				namedQueries, queryPostProcessors));
 
 		composition = composition.append(RepositoryFragment.implemented(target));
 		result.addAdvice(new ImplementationMethodExecutionInterceptor(composition));
@@ -522,114 +522,6 @@ public abstract class RepositoryFactorySupport implements BeanClassLoaderAware, 
 				.orElseThrow(() -> new IllegalStateException(String.format(
 						"No suitable constructor found on %s to match the given arguments: %s. Make sure you implement a constructor taking these",
 						baseClass, Arrays.stream(constructorArguments).map(Object::getClass).collect(Collectors.toList()))));
-	}
-
-	/**
-	 * This {@code MethodInterceptor} intercepts calls to methods of the custom implementation and delegates the to it if
-	 * configured. Furthermore it resolves method calls to finders and triggers execution of them. You can rely on having
-	 * a custom repository implementation instance set if this returns true.
-	 *
-	 * @author Oliver Gierke
-	 */
-	public class QueryExecutorMethodInterceptor implements MethodInterceptor {
-
-		private final Map<Method, RepositoryQuery> queries;
-		private final QueryExecutionResultHandler resultHandler;
-
-		/**
-		 * Creates a new {@link QueryExecutorMethodInterceptor}. Builds a model of {@link QueryMethod}s to be invoked on
-		 * execution of repository interface methods.
-		 */
-		public QueryExecutorMethodInterceptor(RepositoryInformation repositoryInformation,
-				ProjectionFactory projectionFactory) {
-
-			this.resultHandler = new QueryExecutionResultHandler(CONVERSION_SERVICE);
-
-			Optional<QueryLookupStrategy> lookupStrategy = getQueryLookupStrategy(queryLookupStrategyKey,
-					RepositoryFactorySupport.this.evaluationContextProvider);
-
-			if (!lookupStrategy.isPresent() && repositoryInformation.hasQueryMethods()) {
-
-				throw new IllegalStateException("You have defined query method in the repository but "
-						+ "you don't have any query lookup strategy defined. The "
-						+ "infrastructure apparently does not support query methods!");
-			}
-
-			this.queries = lookupStrategy //
-					.map(it -> mapMethodsToQuery(repositoryInformation, it, projectionFactory)) //
-					.orElse(Collections.emptyMap());
-		}
-
-		private Map<Method, RepositoryQuery> mapMethodsToQuery(RepositoryInformation repositoryInformation,
-				QueryLookupStrategy lookupStrategy, ProjectionFactory projectionFactory) {
-
-			return repositoryInformation.getQueryMethods().stream() //
-					.map(method -> lookupQuery(method, repositoryInformation, lookupStrategy, projectionFactory)) //
-					.peek(pair -> invokeListeners(pair.getSecond())) //
-					.collect(Pair.toMap());
-		}
-
-		private Pair<Method, RepositoryQuery> lookupQuery(Method method, RepositoryInformation information,
-				QueryLookupStrategy strategy, ProjectionFactory projectionFactory) {
-			return Pair.of(method, strategy.resolveQuery(method, information, projectionFactory, namedQueries));
-		}
-
-		@SuppressWarnings({ "rawtypes", "unchecked" })
-		private void invokeListeners(RepositoryQuery query) {
-
-			for (QueryCreationListener listener : queryPostProcessors) {
-
-				ResolvableType typeArgument = ResolvableType.forClass(QueryCreationListener.class, listener.getClass())
-						.getGeneric(0);
-
-				if (typeArgument != null && typeArgument.isAssignableFrom(ResolvableType.forClass(query.getClass()))) {
-					listener.onCreation(query);
-				}
-			}
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * @see org.aopalliance.intercept.MethodInterceptor#invoke(org.aopalliance.intercept.MethodInvocation)
-		 */
-		@Override
-		@Nullable
-		public Object invoke(@SuppressWarnings("null") MethodInvocation invocation) throws Throwable {
-
-			Method method = invocation.getMethod();
-
-			QueryExecutionConverters.ExecutionAdapter executionAdapter = QueryExecutionConverters //
-					.getExecutionAdapter(method.getReturnType());
-
-			if (executionAdapter == null) {
-				return resultHandler.postProcessInvocationResult(doInvoke(invocation), method);
-			}
-
-			return executionAdapter //
-					.apply(() -> resultHandler.postProcessInvocationResult(doInvoke(invocation), method));
-		}
-
-		@Nullable
-		private Object doInvoke(MethodInvocation invocation) throws Throwable {
-
-			Method method = invocation.getMethod();
-
-			if (hasQueryFor(method)) {
-				return queries.get(method).execute(invocation.getArguments());
-			}
-
-			return invocation.proceed();
-		}
-
-		/**
-		 * Returns whether we know of a query to execute for the given {@link Method};
-		 *
-		 * @param method
-		 * @return
-		 */
-		private boolean hasQueryFor(Method method) {
-			return queries.containsKey(method);
-		}
 	}
 
 	/**

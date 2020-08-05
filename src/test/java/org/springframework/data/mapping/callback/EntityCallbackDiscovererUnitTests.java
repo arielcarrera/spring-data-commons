@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the original author or authors.
+ * Copyright 2019-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,14 @@ package org.springframework.data.mapping.callback;
 import static org.assertj.core.api.Assertions.*;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -32,12 +38,16 @@ import org.springframework.data.mapping.Person;
 import org.springframework.data.mapping.PersonDocument;
 
 /**
+ * Unit tests for {@link EntityCallbackDiscoverer}.
+ *
  * @author Christoph Strobl
+ * @author Myeonghyeon Lee
+ * @author Mark Paluch
  */
-public class EntityCallbackDiscovererUnitTests {
+class EntityCallbackDiscovererUnitTests {
 
 	@Test // DATACMNS-1467
-	public void shouldDiscoverCallbackType() {
+	void shouldDiscoverCallbackType() {
 
 		AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(MyConfig.class);
 
@@ -49,8 +59,43 @@ public class EntityCallbackDiscovererUnitTests {
 		assertThat(entityCallbacks).hasSize(1).element(0).isInstanceOf(MyBeforeSaveCallback.class);
 	}
 
+	@Test // DATACMNS-1735
+	void shouldDiscoverCallbackTypeConcurrencyCache() throws InterruptedException {
+
+		AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(MyConfig.class);
+
+		EntityCallbackDiscoverer discoverer = new EntityCallbackDiscoverer(ctx);
+		int poolSize = Runtime.getRuntime().availableProcessors();
+		ThreadPoolExecutor executor = new ThreadPoolExecutor(poolSize, poolSize, 20, TimeUnit.SECONDS,
+				new LinkedBlockingDeque<>());
+		CountDownLatch startLatch = new CountDownLatch(poolSize);
+		CountDownLatch doneLatch = new CountDownLatch(poolSize);
+
+		List<Exception> exceptions = new CopyOnWriteArrayList<>();
+		for (int i = 0; i < poolSize; i++) {
+			executor.submit(() -> {
+				try {
+					startLatch.countDown();
+					startLatch.await(5, TimeUnit.SECONDS);
+
+					discoverer.getEntityCallbacks(PersonDocument.class,
+							ResolvableType.forType(BeforeSaveCallback.class));
+				} catch (Exception ex) {
+					exceptions.add(ex);
+				} finally {
+					doneLatch.countDown();
+				}
+			});
+		}
+
+		doneLatch.await(10, TimeUnit.SECONDS);
+		executor.shutdownNow();
+
+		assertThat(exceptions).isEmpty();
+	}
+
 	@Test // DATACMNS-1467
-	public void shouldDiscoverCallbackTypeByName() {
+	void shouldDiscoverCallbackTypeByName() {
 
 		AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(MyConfig.class);
 
@@ -65,7 +110,7 @@ public class EntityCallbackDiscovererUnitTests {
 	}
 
 	@Test // DATACMNS-1467
-	public void shouldSupportCallbackTypes() {
+	void shouldSupportCallbackTypes() {
 
 		EntityCallbackDiscoverer discoverer = new EntityCallbackDiscoverer();
 
@@ -79,7 +124,7 @@ public class EntityCallbackDiscovererUnitTests {
 	}
 
 	@Test // DATACMNS-1467
-	public void shouldSupportInstanceCallbackTypes() {
+	void shouldSupportInstanceCallbackTypes() {
 
 		EntityCallbackDiscoverer discoverer = new EntityCallbackDiscoverer();
 
@@ -99,7 +144,7 @@ public class EntityCallbackDiscovererUnitTests {
 	}
 
 	@Test // DATACMNS-1467
-	public void shouldDispatchInOrder() {
+	void shouldDispatchInOrder() {
 
 		AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(OrderedConfig.class);
 
@@ -155,14 +200,14 @@ public class EntityCallbackDiscovererUnitTests {
 		@Order(3)
 		static class Third implements EntityCallback<Person> {
 
-			public Person beforeSave(Person object) {
+			Person beforeSave(Person object) {
 				return object;
 			}
 		}
 
 		static class Second implements EntityCallback<Person>, Ordered {
 
-			public Person beforeSave(Person object) {
+			Person beforeSave(Person object) {
 				return object;
 			}
 
@@ -175,7 +220,7 @@ public class EntityCallbackDiscovererUnitTests {
 		@Order(1)
 		static class First implements EntityCallback<Person> {
 
-			public Person beforeSave(Person object) {
+			Person beforeSave(Person object) {
 				return object;
 			}
 		}

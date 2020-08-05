@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2019 the original author or authors.
+ * Copyright 2008-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,9 @@ package org.springframework.data.repository.query;
 import static java.lang.String.*;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,6 +28,7 @@ import org.springframework.core.MethodParameter;
 import org.springframework.core.ResolvableType;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.repository.util.ClassUtils;
 import org.springframework.data.repository.util.QueryExecutionConverters;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.Lazy;
@@ -41,7 +44,7 @@ import org.springframework.util.Assert;
  */
 public class Parameter {
 
-	static final List<Class<?>> TYPES = Arrays.asList(Pageable.class, Sort.class);
+	static final List<Class<?>> TYPES;
 
 	private static final String NAMED_PARAMETER_TEMPLATE = ":%s";
 	private static final String POSITION_PARAMETER_TEMPLATE = "?%s";
@@ -50,6 +53,18 @@ public class Parameter {
 	private final Class<?> parameterType;
 	private final boolean isDynamicProjectionParameter;
 	private final Lazy<Optional<String>> name;
+
+	static {
+
+		List<Class<?>> types = new ArrayList<>(Arrays.asList(Pageable.class, Sort.class));
+
+		// consider Kotlin Coroutines Continuation a special parameter. That parameter is synthetic and should not get
+		// bound to any query.
+
+		ClassUtils.ifPresent("kotlin.coroutines.Continuation", Parameter.class.getClassLoader(), types::add);
+
+		TYPES = Collections.unmodifiableList(types);
+	}
 
 	/**
 	 * Creates a new {@link Parameter} for the given {@link MethodParameter}.
@@ -63,7 +78,7 @@ public class Parameter {
 		this.parameter = parameter;
 		this.parameterType = potentiallyUnwrapParameterType(parameter);
 		this.isDynamicProjectionParameter = isDynamicProjectionParameter(parameter);
-		this.name = Lazy.of(() -> {
+		this.name = TYPES.contains(parameter.getParameterType()) ? Lazy.of(Optional.empty()) : Lazy.of(() -> {
 			Param annotation = parameter.getParameterAnnotation(Param.class);
 			return Optional.ofNullable(annotation == null ? parameter.getParameterName() : annotation.value());
 		});

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the original author or authors.
+ * Copyright 2012-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,10 +20,11 @@ import static org.mockito.Mockito.*;
 
 import java.io.Serializable;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.factory.config.InstantiationAwareBeanPostProcessorAdapter;
@@ -42,8 +43,8 @@ import org.springframework.data.repository.core.support.RepositoryFactoryInforma
  *
  * @author Oliver Gierke
  */
-@RunWith(MockitoJUnitRunner.class)
-public class DomainClassConverterIntegrationTests {
+@ExtendWith(MockitoExtension.class)
+class DomainClassConverterIntegrationTests {
 
 	@Mock @SuppressWarnings("rawtypes") RepositoryFactoryBeanSupport factory;
 	@Mock PersonRepository repository;
@@ -51,7 +52,7 @@ public class DomainClassConverterIntegrationTests {
 
 	@Test
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public void findsRepositoryFactories() {
+	void findsRepositoryFactories() {
 
 		DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory() {
 			@Override

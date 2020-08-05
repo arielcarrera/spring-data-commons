@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the original author or authors.
+ * Copyright 2012-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,12 +21,13 @@ import java.io.IOException;
 
 import javax.inject.Named;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.AnnotatedGenericBeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
+import org.springframework.beans.factory.support.SimpleBeanDefinitionRegistry;
 import org.springframework.context.annotation.AnnotationBeanNameGenerator;
 import org.springframework.context.annotation.ScannedGenericBeanDefinition;
 import org.springframework.core.type.classreading.MetadataReader;
@@ -39,32 +40,34 @@ import org.springframework.data.repository.core.support.RepositoryFactoryBeanSup
  *
  * @author Oliver Gierke
  * @author Jens Schauder
+ * @author Mark Paluch
+ * @soundtrack Take Me Away (Extended Mix) - Kaimo K, Trance Classics & Susanne Teutenberg
  */
-public class RepositoryBeanNameGeneratorUnitTests {
+class RepositoryBeanNameGeneratorUnitTests {
 
 	static final String SAMPLE_IMPLEMENTATION_BEAN_NAME = "repositoryBeanNameGeneratorUnitTests.SomeImplementation";
 
 	RepositoryBeanNameGenerator generator;
 	BeanDefinitionRegistry registry;
 
-	@Before
-	public void setUp() {
+	@BeforeEach
+	void setUp() {
 		this.generator = new RepositoryBeanNameGenerator(Thread.currentThread().getContextClassLoader(),
-				new AnnotationBeanNameGenerator());
+				new AnnotationBeanNameGenerator(), new SimpleBeanDefinitionRegistry());
 	}
 
 	@Test
-	public void usesPlainClassNameIfNoAnnotationPresent() {
+	void usesPlainClassNameIfNoAnnotationPresent() {
 		assertThat(generator.generateBeanName(getBeanDefinitionFor(MyRepository.class))).isEqualTo("myRepository");
 	}
 
 	@Test
-	public void usesAnnotationValueIfAnnotationPresent() {
+	void usesAnnotationValueIfAnnotationPresent() {
 		assertThat(generator.generateBeanName(getBeanDefinitionFor(AnnotatedInterface.class))).isEqualTo("specialName");
 	}
 
 	@Test // DATACMNS-1115
-	public void usesClassNameOfScannedBeanDefinition() throws IOException {
+	void usesClassNameOfScannedBeanDefinition() throws IOException {
 
 		MetadataReaderFactory factory = new SimpleMetadataReaderFactory();
 		MetadataReader reader = factory.getMetadataReader(SomeImplementation.class.getName());
@@ -75,7 +78,7 @@ public class RepositoryBeanNameGeneratorUnitTests {
 	}
 
 	@Test // DATACMNS-1115
-	public void usesClassNameOfAnnotatedBeanDefinition() {
+	void usesClassNameOfAnnotatedBeanDefinition() {
 
 		BeanDefinition definition = new AnnotatedGenericBeanDefinition(SomeImplementation.class);
 

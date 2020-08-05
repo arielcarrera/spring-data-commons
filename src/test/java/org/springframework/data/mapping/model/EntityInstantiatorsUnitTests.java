@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the original author or authors.
+ * Copyright 2012-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.convert;
+package org.springframework.data.mapping.model;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -21,10 +21,11 @@ import static org.mockito.Mockito.*;
 import java.util.Collections;
 import java.util.Map;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.data.mapping.PersistentEntity;
 
 /**
@@ -32,43 +33,42 @@ import org.springframework.data.mapping.PersistentEntity;
  *
  * @author Oliver Gierke
  */
-@RunWith(MockitoJUnitRunner.class)
-public class EntityInstantiatorsUnitTests {
+@ExtendWith(MockitoExtension.class)
+class EntityInstantiatorsUnitTests {
 
 	@Mock PersistentEntity<?, ?> entity;
 	@Mock EntityInstantiator customInstantiator;
 
 	@Test
-	public void rejectsNullFallbackInstantiator() {
+	void rejectsNullFallbackInstantiator() {
 		assertThatIllegalArgumentException().isThrownBy(() -> new EntityInstantiators((EntityInstantiator) null));
 	}
 
 	@Test
-	public void usesReflectionEntityInstantiatorAsDefaultFallback() {
+	void usesReflectionEntityInstantiatorAsDefaultFallback() {
 
 		EntityInstantiators instantiators = new EntityInstantiators();
 		assertThat(instantiators.getInstantiatorFor(entity)).isInstanceOf(ClassGeneratingEntityInstantiator.class);
 	}
 
 	@Test
-	public void returnsCustomInstantiatorForTypeIfRegistered() {
+	void returnsCustomInstantiatorForTypeIfRegistered() {
 
 		doReturn(String.class).when(entity).getType();
 
-		Map<Class<?>, EntityInstantiator> customInstantiators = Collections
-				.singletonMap(String.class, customInstantiator);
+		Map<Class<?>, EntityInstantiator> customInstantiators = Collections.singletonMap(String.class, customInstantiator);
 
 		EntityInstantiators instantiators = new EntityInstantiators(customInstantiators);
 		assertThat(instantiators.getInstantiatorFor(entity)).isEqualTo(customInstantiator);
 	}
 
 	@Test
-	public void usesCustomFallbackInstantiatorsIfConfigured() {
+	void usesCustomFallbackInstantiatorsIfConfigured() {
 
 		doReturn(Object.class).when(entity).getType();
 
-		Map<Class<?>, EntityInstantiator> customInstantiators = Collections
-				.singletonMap(String.class, ReflectionEntityInstantiator.INSTANCE);
+		Map<Class<?>, EntityInstantiator> customInstantiators = Collections.singletonMap(String.class,
+				ReflectionEntityInstantiator.INSTANCE);
 
 		EntityInstantiators instantiators = new EntityInstantiators(customInstantiator, customInstantiators);
 		instantiators.getInstantiatorFor(entity);
@@ -76,7 +76,6 @@ public class EntityInstantiatorsUnitTests {
 		assertThat(instantiators.getInstantiatorFor(entity)).isEqualTo(customInstantiator);
 
 		doReturn(String.class).when(entity).getType();
-		assertThat(instantiators.getInstantiatorFor(entity))
-				.isEqualTo((EntityInstantiator) ReflectionEntityInstantiator.INSTANCE);
+		assertThat(instantiators.getInstantiatorFor(entity)).isEqualTo(ReflectionEntityInstantiator.INSTANCE);
 	}
 }

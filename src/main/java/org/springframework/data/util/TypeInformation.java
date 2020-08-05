@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2019 the original author or authors.
+ * Copyright 2008-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -107,7 +107,7 @@ public interface TypeInformation<S> {
 	}
 
 	/**
-	 * Returns whether the property is a {@ link java.util.Map}. If this returns {@literal true} you can expect
+	 * Returns whether the property is a {@link java.util.Map}. If this returns {@literal true} you can expect
 	 * {@link #getComponentType()} as well as {@link #getMapValueType()} to return something not {@literal null}.
 	 *
 	 * @return
