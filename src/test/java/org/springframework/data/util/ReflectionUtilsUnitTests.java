@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the original author or authors.
+ * Copyright 2012-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,8 +20,8 @@ import static org.assertj.core.api.Assertions.*;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.MethodParameter;
 import org.springframework.data.mapping.model.TypeCreatingSyntheticClassKt;
@@ -40,7 +40,7 @@ public class ReflectionUtilsUnitTests {
 	@SuppressWarnings("rawtypes") Constructor constructor;
 	Field reference;
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		this.reference = Sample.class.getField("field");
 		this.constructor = ConstructorDetection.class.getConstructor(int.class, String.class);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2019 the original author or authors.
+ * Copyright 2008-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,6 +43,7 @@ import org.springframework.util.StringUtils;
  * @author Thomas Darimont
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Shaun Chyxion
  */
 public class PartTree implements Streamable<OrPart> {
 
@@ -57,7 +58,7 @@ public class PartTree implements Streamable<OrPart> {
 	 * @see <a href="https://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html#ubc">Pattern</a>
 	 */
 	private static final String KEYWORD_TEMPLATE = "(%s)(?=(\\p{Lu}|\\P{InBASIC_LATIN}))";
-	private static final String QUERY_PATTERN = "find|read|get|query|stream";
+	private static final String QUERY_PATTERN = "find|read|get|query|search|stream";
 	private static final String COUNT_PATTERN = "count";
 	private static final String EXISTS_PATTERN = "exists";
 	private static final String DELETE_PATTERN = "delete|remove";
@@ -70,7 +71,7 @@ public class PartTree implements Streamable<OrPart> {
 	private final Subject subject;
 
 	/**
-	 * The subject, for example "findDistinctUserByNameOrderByAge" would have the predicate "NameOrderByAge".
+	 * The predicate, for example "findDistinctUserByNameOrderByAge" would have the predicate "NameOrderByAge".
 	 */
 	private final Predicate predicate;
 

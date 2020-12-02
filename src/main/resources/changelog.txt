@@ -1,6 +1,266 @@
 Spring Data Commons Changelog
 =============================
 
+Changes in version 2.3.2.RELEASE (2020-07-22)
+---------------------------------------------
+* DATACMNS-1772 - SpringDataAnnotationBeanNameGenerator calls BeanNameGenerator without using BeanDefinitionRegistry.
+* DATACMNS-1771 - Upgrade to Vavr 0.10.3.
+* DATACMNS-1768 - InstantiationAwarePropertyAccessor loses state when updating multiple properties.
+* DATACMNS-1767 - Disable ClassGeneratingEntityInstantiator and ClassGeneratingPropertyAccessorFactory when running native-image.
+* DATACMNS-1758 - ConcurrencyModificationException in DefaultEntityCallbacks.
+* DATACMNS-1753 - CompletableFuture is considered a reactive type.
+* DATACMNS-1750 - PageImpl.toString generates NPE when the first element in the content is null.
+* DATACMNS-1745 - Refactor CustomAnnotationTransactionAttributeSource to use computeTransactionAttribute template method.
+* DATACMNS-1744 - Replace whitelist with a term that does not have racist connotations.
+* DATACMNS-1743 - Translation of URI segments and request parameters into aggregates broken.
+* DATACMNS-1742 - Release 2.3.2 (Neumann SR2).
+
+
+Changes in version 2.2.9.RELEASE (2020-07-22)
+---------------------------------------------
+* DATACMNS-1772 - SpringDataAnnotationBeanNameGenerator calls BeanNameGenerator without using BeanDefinitionRegistry.
+* DATACMNS-1771 - Upgrade to Vavr 0.10.3.
+* DATACMNS-1750 - PageImpl.toString generates NPE when the first element in the content is null.
+* DATACMNS-1744 - Replace whitelist with a term that does not have racist connotations.
+* DATACMNS-1743 - Translation of URI segments and request parameters into aggregates broken.
+* DATACMNS-1741 - Release 2.2.9 (Moore SR9).
+
+
+Changes in version 2.1.19.RELEASE (2020-07-22)
+----------------------------------------------
+* DATACMNS-1750 - PageImpl.toString generates NPE when the first element in the content is null.
+* DATACMNS-1744 - Replace whitelist with a term that does not have racist connotations.
+* DATACMNS-1740 - Release 2.1.19 (Lovelace SR19).
+
+
+Changes in version 2.4.0-M1 (2020-06-25)
+----------------------------------------
+* DATACMNS-1755 - Apply round of polishing.
+* DATACMNS-1753 - CompletableFuture is considered a reactive type.
+* DATACMNS-1750 - PageImpl.toString generates NPE when the first element in the content is null.
+* DATACMNS-1745 - Refactor CustomAnnotationTransactionAttributeSource to use computeTransactionAttribute template method.
+* DATACMNS-1744 - Replace whitelist with a term that does not have racist connotations.
+* DATACMNS-1743 - Translation of URI segments and request parameters into aggregates broken.
+* DATACMNS-1739 - Use standard Spring code of conduct.
+* DATACMNS-1738 - Expose method to obtain the repository query method return type.
+* DATACMNS-1735 - ConcurrencyModificationException in EntityCallbackDiscoverer caused by concurrent cachedEntityCallbacks modification.
+* DATACMNS-1734 - Delay Repositories initialization in DomainClassConverter.
+* DATACMNS-1733 - JavaDoc for Range factory methods is incorrect.
+* DATACMNS-1730 - Update releasetrain reference documentation with spring-data-bom artifact.
+* DATACMNS-1726 - Delombok source files.
+* DATACMNS-1725 - Release 2.4 M1 (2020.0.0).
+* DATACMNS-1706 - PreferredConstructor needs to improve bottleneck occurrence.
+* DATACMNS-1653 - Add support for RxJava 3.
+
+
+Changes in version 2.3.1.RELEASE (2020-06-10)
+---------------------------------------------
+* DATACMNS-1738 - Expose method to obtain the repository query method return type.
+* DATACMNS-1735 - ConcurrencyModificationException in EntityCallbackDiscoverer caused by concurrent cachedEntityCallbacks modification.
+* DATACMNS-1734 - Delay Repositories initialization in DomainClassConverter.
+* DATACMNS-1733 - JavaDoc for Range factory methods is incorrect.
+* DATACMNS-1724 - Release 2.3.1 (Neumann SR1).
+* DATACMNS-1706 - PreferredConstructor needs to improve bottleneck occurrence.
+
+
+Changes in version 2.2.8.RELEASE (2020-06-10)
+---------------------------------------------
+* DATACMNS-1734 - Delay Repositories initialization in DomainClassConverter.
+* DATACMNS-1733 - JavaDoc for Range factory methods is incorrect.
+* DATACMNS-1722 - More defensive lookup of XmlBeamHttpMessageConverter in SpringDataWebConfiguration.
+* DATACMNS-1721 - Lazily evaluate potential property matches in PropertyReferenceException.
+* DATACMNS-1720 - Fix Javadoc for CustomAnnotationTransactionAttributeSource to correctly describe JTA support.
+* DATACMNS-1717 - Mention performance behavior of Lambda EntityCallbacks in reference documentation.
+* DATACMNS-1712 - Release 2.2.8 (Moore SR8).
+* DATACMNS-1706 - PreferredConstructor needs to improve bottleneck occurrence.
+
+
+Changes in version 2.1.18.RELEASE (2020-06-10)
+----------------------------------------------
+* DATACMNS-1734 - Delay Repositories initialization in DomainClassConverter.
+* DATACMNS-1722 - More defensive lookup of XmlBeamHttpMessageConverter in SpringDataWebConfiguration.
+* DATACMNS-1720 - Fix Javadoc for CustomAnnotationTransactionAttributeSource to correctly describe JTA support.
+* DATACMNS-1715 - Remove Travis CI.
+* DATACMNS-1711 - Release 2.1.18 (Lovelace SR18).
+
+
+Changes in version 2.3.0.RELEASE (2020-05-12)
+---------------------------------------------
+* DATACMNS-1722 - More defensive lookup of XmlBeamHttpMessageConverter in SpringDataWebConfiguration.
+* DATACMNS-1721 - Lazily evaluate potential property matches in PropertyReferenceException.
+* DATACMNS-1720 - Fix Javadoc for CustomAnnotationTransactionAttributeSource to correctly describe JTA support.
+* DATACMNS-1718 - Migrate tests to JUnit 5.
+* DATACMNS-1717 - Mention performance behavior of Lambda EntityCallbacks in reference documentation.
+* DATACMNS-1715 - Remove Travis CI.
+* DATACMNS-1713 - Release 2.3 GA (Neumann).
+* DATACMNS-1676 - Use shared ConversionService in DefaultAuditableBeanWrapperFactory.
+
+
+Changes in version 2.3.0.RC2 (2020-04-28)
+-----------------------------------------
+* DATACMNS-1710 - Avoid potentially expensive constructor parameter creation where possible.
+* DATACMNS-1707 - CoroutineCrudRepository misses suspend for deleteAll(entityStream: Flow<S>).
+* DATACMNS-1701 - Use JDK 14 for Java.NEXT CI testing.
+* DATACMNS-1698 - Reduce allocations in EntityCallbackDiscoverer.
+* DATACMNS-1694 - Release 2.3 RC2 (Neumann).
+
+
+Changes in version 2.2.7.RELEASE (2020-04-28)
+---------------------------------------------
+* DATACMNS-1710 - Avoid potentially expensive constructor parameter creation where possible.
+* DATACMNS-1691 - Update .gitignore to include STS specific config files.
+* DATACMNS-1690 - Release 2.2.7 (Moore SR7).
+
+
+Changes in version 2.1.17.RELEASE (2020-04-28)
+----------------------------------------------
+* DATACMNS-1710 - Avoid potentially expensive constructor parameter creation where possible.
+* DATACMNS-1691 - Update .gitignore to include STS specific config files.
+* DATACMNS-1684 - Fix grammar in reference documentation.
+* DATACMNS-1683 - SpelExtractor does not consider quotation offsets from rewritten query.
+* DATACMNS-1679 - ReactiveWrappers uses package-private types in its API.
+* DATACMNS-1674 - Release 2.1.17 (Lovelace SR17).
+
+
+Changes in version 2.3.0.RC1 (2020-03-31)
+-----------------------------------------
+* DATACMNS-1691 - Update .gitignore to include STS specific config files.
+* DATACMNS-1689 - RepositoryMetadata.getReturnedDomainClass(...) returns Object for suspended methods.
+* DATACMNS-1685 - Provide documentation for custom conversions.
+* DATACMNS-1684 - Fix grammar in reference documentation.
+* DATACMNS-1683 - SpelExtractor does not consider quotation offsets from rewritten query.
+* DATACMNS-1680 - Release 2.3 RC1 (Neumann).
+* DATACMNS-658 - Extend SortHandlerMethodArgument resolver to be able to detect the request for ignore-case.
+
+
+Changes in version 2.2.6.RELEASE (2020-03-25)
+---------------------------------------------
+* DATACMNS-1684 - Fix grammar in reference documentation.
+* DATACMNS-1683 - SpelExtractor does not consider quotation offsets from rewritten query.
+* DATACMNS-1679 - ReactiveWrappers uses package-private types in its API.
+* DATACMNS-1675 - Release 2.2.6 (Moore SR6).
+
+
+Changes in version 2.3.0.M4 (2020-03-11)
+----------------------------------------
+* DATACMNS-1679 - ReactiveWrappers uses package-private types in its API.
+* DATACMNS-1673 - Use Method.getParameterCount() where possible.
+* DATACMNS-1672 - Fix documentation typos.
+* DATACMNS-1667 - Release 2.3 M4 (Neumann).
+* DATACMNS-1610 - Improve auditing metadata detection.
+
+
+Changes in version 2.2.5.RELEASE (2020-02-26)
+---------------------------------------------
+* DATACMNS-1673 - Use Method.getParameterCount() where possible.
+* DATACMNS-1672 - Fix documentation typos.
+* DATACMNS-1671 - Auditor attempts to set created date on null object.
+* DATACMNS-1661 - Add missing parameter to object-mapping property population in reference documentation.
+* DATACMNS-1660 - Add anchor to section on mapping recommendations in reference documentation.
+* DATACMNS-1651 - Fix typo in Javadoc.
+* DATACMNS-1650 - Release 2.2.5 (Moore SR5).
+
+
+Changes in version 2.1.16.RELEASE (2020-02-26)
+----------------------------------------------
+* DATACMNS-1673 - Use Method.getParameterCount() where possible.
+* DATACMNS-1672 - Fix documentation typos.
+* DATACMNS-1671 - Auditor attempts to set created date on null object.
+* DATACMNS-1661 - Add missing parameter to object-mapping property population in reference documentation.
+* DATACMNS-1660 - Add anchor to section on mapping recommendations in reference documentation.
+* DATACMNS-1651 - Fix typo in Javadoc.
+* DATACMNS-1648 - Release 2.1.16 (Lovelace SR16).
+
+
+Changes in version 2.3.0.M3 (2020-02-12)
+----------------------------------------
+* DATACMNS-1666 - Deprecate Joda-Time and ThreeTenBackport support.
+* DATACMNS-1665 - Changed converter registration broke converter usage in Spring Data Elasticsearch.
+* DATACMNS-1661 - Add missing parameter to object-mapping property population in reference documentation.
+* DATACMNS-1660 - Add anchor to section on mapping recommendations in reference documentation.
+* DATACMNS-1655 - Release 2.3 M3 (Neumann).
+* DATACMNS-1615 - Allow fine grained store specific converter registration.
+* DATACMNS-1212 - Remove unnecessary conversion between Instant and ZonedDateTime.
+
+
+Changes in version 2.3.0.M2 (2020-01-17)
+----------------------------------------
+* DATACMNS-1652 - Release 2.3 M2 (Neumann).
+
+
+Changes in version 2.3.0.M1 (2020-01-16)
+----------------------------------------
+* DATACMNS-1651 - Fix typo in Javadoc.
+* DATACMNS-1647 - Switch to use factory methods of RepresentationModel classes.
+* DATACMNS-1645 - Add search prefix for part tree queries.
+* DATACMNS-1643 - Update copyright years to 2020.
+* DATACMNS-1635 - Allow dedicated expression of null handling for Querydsl Predicates in WebMVC integration.
+* DATACMNS-1631 - Fix spelling in reference documentation.
+* DATACMNS-1630 - Remove custom copy of ShadowingClassLoader.
+* DATACMNS-1629 - Log module name in RepositoryConfigurationDelegate during repository scanning.
+* DATACMNS-1626 - Add attribute to projection documentation for reuse with R2DBC.
+* DATACMNS-1620 - Improve resource description of repository bean definitions.
+* DATACMNS-1613 - PageImpl created from only a Collection returns invalid size.
+* DATACMNS-1609 - Auditing metadata should not detect paths containing map or collection like segments.
+* DATACMNS-1603 - Reword "wanna" exception messages.
+* DATACMNS-1602 - Reuse generated PropertyAccessor's and Entityinstantiator classes across EntityInstantiators and PersistentPropertyAccessorFactorys.
+* DATACMNS-1601 - Improve CrudRepository JavaDoc with the guarantees and exceptions of findAllById and deleteAllById.
+* DATACMNS-1598 - "Cannot create EnumSet for unknown element type".
+* DATACMNS-1596 - Module not exposing any entity identifying annotations claims all repositories.
+* DATACMNS-1593 - QuerydslPredicateArgumentResolver produces null result for empty form submission.
+* DATACMNS-1592 - Update documentation to use @With instead of @Wither.
+* DATACMNS-1591 - @Primary annotation not honored.
+* DATACMNS-1587 - Release 2.3 M1 (Neumann).
+* DATACMNS-1508 - Add support for Coroutines repositories.
+* DATACMNS-990 - Enable building with JDK11+.
+* DATACMNS-949 - Drop own Converters and use ReactiveAdapterRegistry directly where possible.
+
+
+Changes in version 2.2.4.RELEASE (2020-01-15)
+---------------------------------------------
+* DATACMNS-1643 - Update copyright years to 2020.
+* DATACMNS-1635 - Allow dedicated expression of null handling for Querydsl Predicates in WebMVC integration.
+* DATACMNS-1633 - Release 2.2.4 (Moore SR4).
+* DATACMNS-1593 - QuerydslPredicateArgumentResolver produces null result for empty form submission.
+
+
+Changes in version 2.1.15.RELEASE (2020-01-15)
+----------------------------------------------
+* DATACMNS-1643 - Update copyright years to 2020.
+* DATACMNS-1632 - Release 2.1.15 (Lovelace SR15).
+
+
+Changes in version 2.2.3.RELEASE (2019-12-04)
+---------------------------------------------
+* DATACMNS-1631 - Fix spelling in reference documentation.
+* DATACMNS-1629 - Log module name in RepositoryConfigurationDelegate during repository scanning.
+* DATACMNS-1626 - Add attribute to projection documentation for reuse with R2DBC.
+* DATACMNS-1622 - Release 2.2.3 (Moore SR3).
+* DATACMNS-1603 - Reword "wanna" exception messages.
+
+
+Changes in version 2.1.14.RELEASE (2019-12-04)
+----------------------------------------------
+* DATACMNS-1631 - Fix spelling in reference documentation.
+* DATACMNS-1629 - Log module name in RepositoryConfigurationDelegate during repository scanning.
+* DATACMNS-1621 - Release 2.1.14 (Lovelace SR14).
+* DATACMNS-1603 - Reword "wanna" exception messages.
+
+
+Changes in version 2.2.2.RELEASE (2019-11-18)
+---------------------------------------------
+* DATACMNS-1618 - Set loglevel for java.time converters to debug (temporary fix).
+* DATACMNS-1613 - PageImpl created from only a Collection returns invalid size.
+* DATACMNS-1609 - Auditing metadata should not detect paths containing map or collection like segments.
+* DATACMNS-1606 - Release 2.2.2 (Moore SR2).
+
+
+Changes in version 2.1.13.RELEASE (2019-11-18)
+----------------------------------------------
+* DATACMNS-1613 - PageImpl created from only a Collection returns invalid size.
+* DATACMNS-1605 - Release 2.1.13 (Lovelace SR13).
+
+
 Changes in version 2.2.1.RELEASE (2019-11-04)
 ---------------------------------------------
 * DATACMNS-1602 - Reuse generated PropertyAccessor's and Entityinstantiator classes across EntityInstantiators and PersistentPropertyAccessorFactorys.
@@ -2535,4 +2795,26 @@ Aspects
 Repository
 * Base classes for the repository support
 * Pagination support
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

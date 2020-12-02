@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2019 the original author or authors.
+ * Copyright 2014-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,14 +23,18 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import org.assertj.core.api.AbstractLongAssert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
@@ -50,12 +54,12 @@ import org.springframework.data.mapping.context.SampleMappingContext;
  * @author Jens Schauder
  * @since 1.8
  */
-public class MappingAuditableBeanWrapperFactoryUnitTests {
+class MappingAuditableBeanWrapperFactoryUnitTests {
 
 	DefaultAuditableBeanWrapperFactory factory;
 
-	@Before
-	public void setUp() {
+	@BeforeEach
+	void setUp() {
 
 		SampleMappingContext context = new SampleMappingContext();
 		context.getPersistentEntity(Sample.class);
@@ -67,7 +71,7 @@ public class MappingAuditableBeanWrapperFactoryUnitTests {
 	}
 
 	@Test // DATACMNS-365
-	public void discoversAuditingPropertyOnField() {
+	void discoversAuditingPropertyOnField() {
 
 		Sample sample = new Sample();
 
@@ -81,7 +85,7 @@ public class MappingAuditableBeanWrapperFactoryUnitTests {
 	}
 
 	@Test // DATACMNS-365
-	public void discoversAuditingPropertyOnAccessor() {
+	void discoversAuditingPropertyOnAccessor() {
 
 		Sample sample = new Sample();
 
@@ -95,7 +99,7 @@ public class MappingAuditableBeanWrapperFactoryUnitTests {
 	}
 
 	@Test // DATACMNS-365
-	public void settingInavailablePropertyIsNoop() {
+	void settingInavailablePropertyIsNoop() {
 
 		Sample sample = new Sample();
 
@@ -105,19 +109,19 @@ public class MappingAuditableBeanWrapperFactoryUnitTests {
 	}
 
 	@Test // DATACMNS-365
-	public void doesNotReturnWrapperForEntityNotUsingAuditing() {
+	void doesNotReturnWrapperForEntityNotUsingAuditing() {
 		assertThat(factory.getBeanWrapperFor(new NoAuditing())).isNotPresent();
 	}
 
 	@Test // DATACMNS-365
-	public void returnsAuditableWrapperForAuditable() {
+	void returnsAuditableWrapperForAuditable() {
 
 		assertThat(factory.getBeanWrapperFor(mock(ExtendingAuditable.class)))
 				.hasValueSatisfying(it -> assertThat(it).isInstanceOf(AuditableInterfaceBeanWrapper.class));
 	}
 
 	@Test // DATACMNS-638
-	public void returnsLastModificationCalendarAsCalendar() {
+	void returnsLastModificationCalendarAsCalendar() {
 
 		Date reference = new Date();
 
@@ -129,7 +133,7 @@ public class MappingAuditableBeanWrapperFactoryUnitTests {
 	}
 
 	@Test // DATACMNS-638
-	public void returnsLastModificationDateTimeAsCalendar() {
+	void returnsLastModificationDateTimeAsCalendar() {
 
 		org.joda.time.LocalDateTime reference = new org.joda.time.LocalDateTime();
 
@@ -138,7 +142,7 @@ public class MappingAuditableBeanWrapperFactoryUnitTests {
 	}
 
 	@Test // DATACMNS-638
-	public void returnsLastModificationDateAsCalendar() {
+	void returnsLastModificationDateAsCalendar() {
 
 		Date reference = new Date();
 
@@ -147,7 +151,7 @@ public class MappingAuditableBeanWrapperFactoryUnitTests {
 	}
 
 	@Test // DATACMNS-638, DATACMNS-43
-	public void returnsLastModificationJsr310DateTimeAsCalendar() {
+	void returnsLastModificationJsr310DateTimeAsCalendar() {
 
 		LocalDateTime reference = LocalDateTime.now();
 
@@ -155,7 +159,7 @@ public class MappingAuditableBeanWrapperFactoryUnitTests {
 	}
 
 	@Test // DATACMNS-638, DATACMNS-43
-	public void returnsLastModificationThreeTenBpDateTimeAsCalendar() {
+	void returnsLastModificationThreeTenBpDateTimeAsCalendar() {
 
 		org.threeten.bp.LocalDateTime reference = org.threeten.bp.LocalDateTime.now();
 
@@ -164,7 +168,7 @@ public class MappingAuditableBeanWrapperFactoryUnitTests {
 	}
 
 	@Test // DATACMNS-1109
-	public void exposesInstantAsModificationDate() {
+	void exposesInstantAsModificationDate() {
 
 		SampleWithInstant sample = new SampleWithInstant();
 		sample.modified = Instant.now();
@@ -176,7 +180,7 @@ public class MappingAuditableBeanWrapperFactoryUnitTests {
 	}
 
 	@Test // DATACMNS-1259
-	public void exposesLongAsModificationDate() {
+	void exposesLongAsModificationDate() {
 
 		Long reference = new Date().getTime();
 
@@ -184,7 +188,7 @@ public class MappingAuditableBeanWrapperFactoryUnitTests {
 	}
 
 	@Test // DATACMNS-1274
-	public void writesNestedAuditingData() {
+	void writesNestedAuditingData() {
 
 		WithEmbedded target = new WithEmbedded();
 		target.embedded = new Embedded();
@@ -209,6 +213,52 @@ public class MappingAuditableBeanWrapperFactoryUnitTests {
 			assertThat(embedded.modifier).isEqualTo(user);
 
 			assertThat(it.getLastModifiedDate()).hasValue(now);
+		});
+	}
+
+	@Test // DATACMNS-1461, DATACMNS-1671
+	void skipsNullIntermediatesWhenSettingProperties() {
+
+		WithEmbedded withEmbedded = new WithEmbedded();
+
+		assertThat(factory.getBeanWrapperFor(withEmbedded)).hasValueSatisfying(it -> {
+			assertThatCode(() -> it.setCreatedBy("user")).doesNotThrowAnyException();
+			assertThatCode(() -> it.setLastModifiedDate(Instant.now())).doesNotThrowAnyException();
+		});
+	}
+
+	@Test // DATACMNS-1438
+	void skipsCollectionPropertiesWhenSettingProperties() {
+
+		WithEmbedded withEmbedded = new WithEmbedded();
+		withEmbedded.embedded = new Embedded();
+		withEmbedded.embeddeds = Arrays.asList(new Embedded());
+		withEmbedded.embeddedMap = new HashMap<>();
+		withEmbedded.embeddedMap.put("key", new Embedded());
+
+		assertThat(factory.getBeanWrapperFor(withEmbedded)).hasValueSatisfying(it -> {
+
+			String user = "user";
+			Instant now = Instant.now();
+
+			it.setCreatedBy(user);
+			it.setLastModifiedBy(user);
+			it.setLastModifiedDate(now);
+			it.setCreatedDate(now);
+
+			Embedded embedded = withEmbedded.embeddeds.iterator().next();
+
+			assertThat(embedded.created).isNull();
+			assertThat(embedded.creator).isNull();
+			assertThat(embedded.modified).isNull();
+			assertThat(embedded.modifier).isNull();
+
+			embedded = withEmbedded.embeddedMap.get("key");
+
+			assertThat(embedded.created).isNull();
+			assertThat(embedded.creator).isNull();
+			assertThat(embedded.modified).isNull();
+			assertThat(embedded.modifier).isNull();
 		});
 	}
 
@@ -274,5 +324,7 @@ public class MappingAuditableBeanWrapperFactoryUnitTests {
 
 	static class WithEmbedded {
 		Embedded embedded;
+		Collection<Embedded> embeddeds;
+		Map<String, Embedded> embeddedMap;
 	}
 }

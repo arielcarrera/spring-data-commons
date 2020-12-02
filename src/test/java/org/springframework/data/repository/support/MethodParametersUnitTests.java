@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Optional;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.MethodParameter;
 
@@ -30,10 +30,10 @@ import org.springframework.core.MethodParameter;
  *
  * @author Oliver Gierke
  */
-public class MethodParametersUnitTests {
+class MethodParametersUnitTests {
 
 	@Test
-	public void prefersAnnotatedParameterOverDiscovered() throws Exception {
+	void prefersAnnotatedParameterOverDiscovered() throws Exception {
 
 		Method method = Sample.class.getMethod("method", String.class, String.class, Object.class);
 		MethodParameters parameters = new MethodParameters(method, Optional.of(new AnnotationAttribute(Qualifier.class)));
@@ -47,7 +47,7 @@ public class MethodParametersUnitTests {
 	 * @see #138
 	 */
 	@Test
-	public void returnsParametersOfAGivenType() throws Exception {
+	void returnsParametersOfAGivenType() throws Exception {
 
 		Method method = Sample.class.getMethod("method", String.class, String.class, Object.class);
 		MethodParameters methodParameters = new MethodParameters(method);

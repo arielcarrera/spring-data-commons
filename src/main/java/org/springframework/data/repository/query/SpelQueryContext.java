@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,6 +41,7 @@ import org.springframework.util.Assert;
  *
  * @author Jens Schauder
  * @author Gerrit Meier
+ * @author Mark Paluch
  * @since 2.1
  */
 @RequiredArgsConstructor(staticName = "of")
@@ -67,11 +68,11 @@ public class SpelQueryContext {
 
 	/**
 	 * Parses the query for SpEL expressions using the pattern:
-	 * 
+	 *
 	 * <pre>
 	 * &lt;prefix&gt;#{&lt;spel&gt;}
 	 * </pre>
-	 * 
+	 *
 	 * with prefix being the character ':' or '?'. Parsing honors quoted {@literal String}s enclosed in single or double
 	 * quotation marks.
 	 *
@@ -86,7 +87,7 @@ public class SpelQueryContext {
 	/**
 	 * Createsa {@link EvaluatingSpelQueryContext} from the current one and the given
 	 * {@link QueryMethodEvaluationContextProvider}.
-	 * 
+	 *
 	 * @param provider must not be {@literal null}.
 	 * @return
 	 */
@@ -111,7 +112,7 @@ public class SpelQueryContext {
 		/**
 		 * Creates a new {@link EvaluatingSpelQueryContext} for the given {@link QueryMethodEvaluationContextProvider},
 		 * parameter name source and replacement source.
-		 * 
+		 *
 		 * @param evaluationContextProvider must not be {@literal null}.
 		 * @param parameterNameSource must not be {@literal null}.
 		 * @param replacementSource must not be {@literal null}.
@@ -126,11 +127,11 @@ public class SpelQueryContext {
 
 		/**
 		 * Parses the query for SpEL expressions using the pattern:
-		 * 
+		 *
 		 * <pre>
 		 * &lt;prefix&gt;#{&lt;spel&gt;}
 		 * </pre>
-		 * 
+		 *
 		 * with prefix being the character ':' or '?'. Parsing honors quoted {@literal String}s enclosed in single or double
 		 * quotation marks.
 		 *
@@ -145,7 +146,7 @@ public class SpelQueryContext {
 
 	/**
 	 * Parses a query string, identifies the contained SpEL expressions, replaces them with bind parameters and offers a
-	 * {@link Map} from those bind parameters to the spel expression.
+	 * {@link Map} from those bind parameters to the SpEL expression.
 	 * <p>
 	 * The parser detects quoted parts of the query string and does not detect SpEL expressions inside such quoted parts
 	 * of the query.
@@ -165,7 +166,7 @@ public class SpelQueryContext {
 
 		/**
 		 * Creates a SpelExtractor from a query String.
-		 * 
+		 *
 		 * @param query must not be {@literal null}.
 		 */
 		SpelExtractor(String query) {
@@ -184,7 +185,7 @@ public class SpelQueryContext {
 
 				if (quotedAreas.isQuoted(matcher.start())) {
 
-					resultQuery.append(query.substring(matchedUntil, matcher.end()));
+					resultQuery.append(query, matchedUntil, matcher.end());
 
 				} else {
 
@@ -194,7 +195,7 @@ public class SpelQueryContext {
 					String parameterName = parameterNameSource.apply(expressionCounter, spelExpression);
 					String replacement = replacementSource.apply(prefix, parameterName);
 
-					resultQuery.append(query.substring(matchedUntil, matcher.start()));
+					resultQuery.append(query, matchedUntil, matcher.start());
 					resultQuery.append(replacement);
 
 					expressions.put(parameterName, spelExpression);
@@ -208,7 +209,9 @@ public class SpelQueryContext {
 
 			this.expressions = Collections.unmodifiableMap(expressions);
 			this.query = resultQuery.toString();
-			this.quotations = quotedAreas;
+
+			// recreate quotation map based on rewritten query.
+			this.quotations = new QuotationMap(this.query);
 		}
 
 		/**
@@ -220,6 +223,12 @@ public class SpelQueryContext {
 			return query;
 		}
 
+		/**
+		 * Return whether the {@link #getQueryString() query} at {@code index} is quoted.
+		 *
+		 * @param index
+		 * @return {@literal true} if quoted; {@literal false} otherwise.
+		 */
 		public boolean isQuoted(int index) {
 			return quotations.isQuoted(index);
 		}
@@ -230,7 +239,7 @@ public class SpelQueryContext {
 
 		/**
 		 * A {@literal Map} from parameter name to SpEL expression.
-		 * 
+		 *
 		 * @return Guaranteed to be not {@literal null}.
 		 */
 		Map<String, String> getParameterMap() {
@@ -258,7 +267,7 @@ public class SpelQueryContext {
 
 		/**
 		 * Creates a new {@link QuotationMap} for the query.
-		 * 
+		 *
 		 * @param query can be {@literal null}.
 		 */
 		public QuotationMap(@Nullable String query) {

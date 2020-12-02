@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,11 +20,9 @@ import lombok.EqualsAndHashCode;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.annotation.PersistenceConstructor;
@@ -43,16 +41,13 @@ import org.springframework.util.StringUtils;
  * @author Thomas Darimont
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Myeonghyeon Lee
  */
 public class PreferredConstructor<T, P extends PersistentProperty<P>> {
 
 	private final Constructor<T> constructor;
 	private final List<Parameter<Object, P>> parameters;
-	private final Map<PersistentProperty<?>, Boolean> isPropertyParameterCache = new HashMap<>();
-
-	private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
-	private final Lock read = lock.readLock();
-	private final Lock write = lock.writeLock();
+	private final Map<PersistentProperty<?>, Boolean> isPropertyParameterCache = new ConcurrentHashMap<>();
 
 	/**
 	 * Creates a new {@link PreferredConstructor} from the given {@link Constructor} and {@link Parameter}s.
@@ -123,42 +118,28 @@ public class PreferredConstructor<T, P extends PersistentProperty<P>> {
 	 * {@link PersistentEntity} backing this {@link PreferredConstructor}.
 	 *
 	 * @param property must not be {@literal null}.
-	 * @return
+	 * @return {@literal true} if the {@link PersistentProperty} is used in the constructor.
 	 */
 	public boolean isConstructorParameter(PersistentProperty<?> property) {
 
 		Assert.notNull(property, "Property must not be null!");
 
-		try {
+		Boolean cached = isPropertyParameterCache.get(property);
 
-			read.lock();
-			Boolean cached = isPropertyParameterCache.get(property);
-
-			if (cached != null) {
-				return cached;
-			}
-
-		} finally {
-			read.unlock();
+		if (cached != null) {
+			return cached;
 		}
 
-		try {
-
-			write.lock();
-
-			for (Parameter<?, P> parameter : parameters) {
-				if (parameter.maps(property)) {
-					isPropertyParameterCache.put(property, true);
-					return true;
-				}
+		boolean result = false;
+		for (Parameter<?, P> parameter : parameters) {
+			if (parameter.maps(property)) {
+				isPropertyParameterCache.put(property, true);
+				result = true;
+				break;
 			}
-
-			isPropertyParameterCache.put(property, false);
-			return false;
-
-		} finally {
-			write.unlock();
 		}
+
+		return result;
 	}
 
 	/**
@@ -167,7 +148,7 @@ public class PreferredConstructor<T, P extends PersistentProperty<P>> {
 	 * constructor argument of the enclosing class type.
 	 *
 	 * @param parameter must not be {@literal null}.
-	 * @return
+	 * @return {@literal true} if the {@link PersistentProperty} maps to the enclosing class.
 	 */
 	public boolean isEnclosingClassParameter(Parameter<?, P> parameter) {
 
@@ -231,6 +212,7 @@ public class PreferredConstructor<T, P extends PersistentProperty<P>> {
 			this.hasSpelExpression = Lazy.of(() -> StringUtils.hasText(getSpelExpression()));
 		}
 
+		@Nullable
 		private static String getValue(Annotation[] annotations) {
 
 			return Arrays.stream(annotations)//
@@ -298,7 +280,7 @@ public class PreferredConstructor<T, P extends PersistentProperty<P>> {
 
 			P referencedProperty = entity == null ? null : name == null ? null : entity.getPersistentProperty(name);
 
-			return property != null && property.equals(referencedProperty);
+			return property.equals(referencedProperty);
 		}
 
 		private boolean isEnclosingClassParameter() {

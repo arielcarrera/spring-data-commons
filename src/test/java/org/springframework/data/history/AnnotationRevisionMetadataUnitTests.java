@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 the original author or authors.
+ * Copyright 2017-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import java.time.ZoneOffset;
 import java.util.Date;
 
 import org.assertj.core.api.SoftAssertions;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Reference;
 
@@ -34,12 +34,12 @@ import org.springframework.data.annotation.Reference;
  * @author Oliver Gierke
  * @author Jens Schauder
  */
-public class AnnotationRevisionMetadataUnitTests {
+class AnnotationRevisionMetadataUnitTests {
 
 	SoftAssertions softly = new SoftAssertions();
 
 	@Test // DATACMNS-1173
-	public void exposesNoInformationOnEmptyProbe() {
+	void exposesNoInformationOnEmptyProbe() {
 
 		Sample sample = new Sample();
 		RevisionMetadata<Long> metadata = getMetadata(sample);
@@ -55,7 +55,7 @@ public class AnnotationRevisionMetadataUnitTests {
 	}
 
 	@Test // DATACMNS-1173
-	public void exposesRevisionNumber() {
+	void exposesRevisionNumber() {
 
 		Sample sample = new Sample();
 		sample.revisionNumber = 1L;
@@ -69,7 +69,7 @@ public class AnnotationRevisionMetadataUnitTests {
 	}
 
 	@Test // DATACMNS-1173
-	public void exposesRevisionDateAndInstantForLocalDateTime() {
+	void exposesRevisionDateAndInstantForLocalDateTime() {
 
 		Sample sample = new Sample();
 		sample.revisionDate = LocalDateTime.now();
@@ -84,7 +84,7 @@ public class AnnotationRevisionMetadataUnitTests {
 	}
 
 	@Test // DATACMNS-1251
-	public void exposesRevisionDateAndInstantForInstant() {
+	void exposesRevisionDateAndInstantForInstant() {
 
 		SampleWithInstant sample = new SampleWithInstant();
 		sample.revisionInstant = Instant.now();
@@ -99,7 +99,7 @@ public class AnnotationRevisionMetadataUnitTests {
 	}
 
 	@Test // DATACMNS-1290
-	public void exposesRevisionDateAndInstantForLong() {
+	void exposesRevisionDateAndInstantForLong() {
 
 		SampleWithLong sample = new SampleWithLong();
 		sample.revisionLong = 4711L;
@@ -116,7 +116,7 @@ public class AnnotationRevisionMetadataUnitTests {
 	}
 
 	@Test // DATACMNS-1384
-	public void supportsTimestampRevisionInstant() {
+	void supportsTimestampRevisionInstant() {
 
 		SampleWithTimestamp sample = new SampleWithTimestamp();
 		Instant now = Instant.now();
@@ -128,7 +128,7 @@ public class AnnotationRevisionMetadataUnitTests {
 	}
 
 	@Test // DATACMNS-1384
-	public void supportsDateRevisionInstant() {
+	void supportsDateRevisionInstant() {
 
 		SampleWithDate sample = new SampleWithDate();
 		Date date = new Date();

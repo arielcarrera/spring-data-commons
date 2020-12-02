@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2019 the original author or authors.
+ * Copyright 2014-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,12 +23,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Locale;
 
-import org.junit.Test;
-import org.junit.experimental.runners.Enclosed;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameter;
-import org.junit.runners.Parameterized.Parameters;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import org.springframework.data.geo.Point;
 
@@ -37,53 +34,47 @@ import org.springframework.data.geo.Point;
  *
  * @author Oliver Gierke
  */
-@RunWith(Enclosed.class)
-public class PointFormatterUnitTests {
+class PointFormatterUnitTests {
 
 	static Point REFERENCE = new Point(20.9, 10.8);
 
 	@Test
-	public void testname() {
+	void testname() {
 		// To make sure Maven picks up the tests
 	}
 
-	public static class UnparameterizedTests {
-
-		@Test // DATAREST-279, DATACMNS-626
-		public void rejectsArbitraryNonsense() {
-			assertThatIllegalArgumentException().isThrownBy(() -> INSTANCE.convert("foo")).withMessageContaining("comma");
-		}
-
-		@Test // DATAREST-279, DATACMNS-626
-		public void rejectsMoreThanTwoCoordinates() {
-			assertThatIllegalArgumentException().isThrownBy(() -> INSTANCE.convert("10.8,20.9,30.10"));
-		}
-
-		@Test // DATAREST-279, DATACMNS-626
-		public void rejectsInvalidCoordinate() {
-			assertThatIllegalArgumentException().isThrownBy(() -> INSTANCE.convert("10.8,foo"));
-		}
+	@Test
+	// DATAREST-279, DATACMNS-626
+	void rejectsArbitraryNonsense() {
+		assertThatIllegalArgumentException().isThrownBy(() -> INSTANCE.convert("foo")).withMessageContaining("comma");
 	}
 
-	@RunWith(Parameterized.class)
-	public static class ParameterizedTests {
+	@Test
+	// DATAREST-279, DATACMNS-626
+	void rejectsMoreThanTwoCoordinates() {
+		assertThatIllegalArgumentException().isThrownBy(() -> INSTANCE.convert("10.8,20.9,30.10"));
+	}
 
-		@Parameters
-		public static Collection<String[]> parameters() {
-			return Arrays.asList(new String[] { "10.8,20.9" }, new String[] { " 10.8,20.9 " }, new String[] { " 10.8 ,20.9" },
-					new String[] { " 10.8, 20.9 " });
-		}
+	@Test
+	// DATAREST-279, DATACMNS-626
+	void rejectsInvalidCoordinate() {
+		assertThatIllegalArgumentException().isThrownBy(() -> INSTANCE.convert("10.8,foo"));
+	}
 
-		public @Parameter String source;
+	static Collection<String[]> parameters() {
+		return Arrays.asList(new String[] { "10.8,20.9" }, new String[] { " 10.8,20.9 " }, new String[] { " 10.8 ,20.9" },
+				new String[] { " 10.8, 20.9 " });
+	}
 
-		@Test // DATAREST-279, DATACMNS-626
-		public void convertsPointFromString() {
-			assertThat(INSTANCE.convert(source)).isEqualTo(REFERENCE);
-		}
+	@ParameterizedTest // DATAREST-279, DATACMNS-626
+	@MethodSource("parameters")
+	void convertsPointFromString(String source) {
+		assertThat(INSTANCE.convert(source)).isEqualTo(REFERENCE);
+	}
 
-		@Test // DATAREST-279, DATACMNS-626
-		public void parsesPoint() throws ParseException {
-			assertThat(INSTANCE.parse(source, Locale.US)).isEqualTo(REFERENCE);
-		}
+	@ParameterizedTest // DATAREST-279, DATACMNS-626
+	@MethodSource("parameters")
+	void parsesPoint(String source) throws ParseException {
+		assertThat(INSTANCE.parse(source, Locale.US)).isEqualTo(REFERENCE);
 	}
 }

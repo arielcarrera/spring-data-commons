@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2019 the original author or authors.
+ * Copyright 2008-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -116,7 +116,7 @@ public class PageImpl<T> extends Chunk<T> implements Page<T> {
 		String contentType = "UNKNOWN";
 		List<T> content = getContent();
 
-		if (content.size() > 0) {
+		if (!content.isEmpty() && content.get(0) != null) {
 			contentType = content.get(0).getClass().getName();
 		}
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the original author or authors.
+ * Copyright 2012-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,7 +38,6 @@ import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.type.AnnotationMetadata;
-import org.springframework.core.type.StandardAnnotationMetadata;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.core.type.filter.AspectJTypeFilter;
 import org.springframework.core.type.filter.AssignableTypeFilter;
@@ -124,7 +123,7 @@ public class AnnotationRepositoryConfigurationSource extends RepositoryConfigura
 		}
 
 		this.attributes = new AnnotationAttributes(annotationAttributes);
-		this.enableAnnotationMetadata = new StandardAnnotationMetadata(annotation);
+		this.enableAnnotationMetadata = AnnotationMetadata.introspect(annotation);
 		this.configMetadata = metadata;
 		this.resourceLoader = resourceLoader;
 		this.hasExplicitFilters = hasExplicitFilters(attributes);
@@ -319,6 +318,19 @@ public class AnnotationRepositoryConfigurationSource extends RepositoryConfigura
 		} catch (IllegalArgumentException o_O) {
 			return BootstrapMode.DEFAULT;
 		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.config.RepositoryConfigurationSource#getResourceDescription()
+	 */
+	@Override
+	public String getResourceDescription() {
+
+		String simpleClassName = ClassUtils.getShortName(configMetadata.getClassName());
+		String annoationClassName = ClassUtils.getShortName(enableAnnotationMetadata.getClassName());
+
+		return String.format("@%s declared on %s", annoationClassName, simpleClassName);
 	}
 
 	private Streamable<TypeFilter> parseFilters(String attributeName) {

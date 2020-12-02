@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2019 the original author or authors.
+ * Copyright 2008-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -22,16 +22,15 @@ import static org.mockito.Mockito.*;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
-
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.RepositoryInformation;
-import org.springframework.data.repository.core.support.TransactionalRepositoryProxyPostProcessor.CustomAnnotationTransactionAttributeSource;
+import org.springframework.data.repository.core.support.TransactionalRepositoryProxyPostProcessor.RepositoryAnnotationTransactionAttributeSource;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAttribute;
 import org.springframework.transaction.interceptor.TransactionAttributeSource;
@@ -41,28 +40,29 @@ import org.springframework.transaction.interceptor.TransactionInterceptor;
  * Unit test for {@link TransactionalRepositoryProxyPostProcessor}.
  *
  * @author Oliver Gierke
+ * @author Mark Paluch
  */
-@RunWith(MockitoJUnitRunner.class)
-public class TransactionRepositoryProxyPostProcessorUnitTests {
+@ExtendWith(MockitoExtension.class)
+class TransactionRepositoryProxyPostProcessorUnitTests {
 
 	@Mock ListableBeanFactory beanFactory;
 	@Mock ProxyFactory proxyFactory;
 	@Mock RepositoryInformation repositoryInformation;
 
 	@Test
-	public void rejectsNullBeanFactory() {
+	void rejectsNullBeanFactory() {
 		assertThatIllegalArgumentException()
 				.isThrownBy(() -> new TransactionalRepositoryProxyPostProcessor(null, "transactionManager", true));
 	}
 
 	@Test
-	public void rejectsNullTxManagerName() {
+	void rejectsNullTxManagerName() {
 		assertThatIllegalArgumentException()
 				.isThrownBy(() -> new TransactionalRepositoryProxyPostProcessor(beanFactory, null, true));
 	}
 
 	@Test
-	public void setsUpBasicInstance() throws Exception {
+	void setsUpBasicInstance() throws Exception {
 
 		RepositoryProxyPostProcessor postProcessor = new TransactionalRepositoryProxyPostProcessor(beanFactory, "txManager",
 				true);
@@ -72,21 +72,22 @@ public class TransactionRepositoryProxyPostProcessorUnitTests {
 	}
 
 	@Test // DATACMNS-464
-	public void fallsBackToTargetMethodTransactionSettings() throws Exception {
+	void fallsBackToTargetMethodTransactionSettings() throws Exception {
 		assertTransactionAttributeFor(SampleImplementation.class);
 	}
 
 	@Test // DATACMNS-464
-	public void fallsBackToTargetClassTransactionSettings() throws Exception {
+	void fallsBackToTargetClassTransactionSettings() throws Exception {
 		assertTransactionAttributeFor(SampleImplementationWithClassAnnotation.class);
 	}
 
 	@Test // DATACMNS-732
-	public void considersJtaTransactional() throws Exception {
+	void considersJtaTransactional() throws Exception {
 
 		Method method = SampleRepository.class.getMethod("methodWithJtaOneDotTwoAtTransactional");
 
-		TransactionAttributeSource attributeSource = new CustomAnnotationTransactionAttributeSource();
+		TransactionAttributeSource attributeSource = new RepositoryAnnotationTransactionAttributeSource(
+				repositoryInformation, true);
 		TransactionAttribute attribute = attributeSource.getTransactionAttribute(method, SampleRepository.class);
 
 		assertThat(attribute).isNotNull();
@@ -99,8 +100,8 @@ public class TransactionRepositoryProxyPostProcessorUnitTests {
 
 		when(repositoryInformation.getTargetClassMethod(repositorySaveMethod)).thenReturn(implementationClassMethod);
 
-		CustomAnnotationTransactionAttributeSource attributeSource = new CustomAnnotationTransactionAttributeSource();
-		attributeSource.setRepositoryInformation(repositoryInformation);
+		RepositoryAnnotationTransactionAttributeSource attributeSource = new RepositoryAnnotationTransactionAttributeSource(
+				repositoryInformation, true);
 
 		TransactionAttribute attribute = attributeSource.getTransactionAttribute(repositorySaveMethod,
 				SampleImplementation.class);

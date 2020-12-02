@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2019 the original author or authors.
+ * Copyright 2015-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -72,7 +72,7 @@ public class Range<T extends Comparable<T>> {
 	}
 
 	/**
-	 * Creates a new {@link Range} with inclusive bounds for both values.
+	 * Creates a new {@link Range} with exclusive bounds for both values.
 	 *
 	 * @param <T>
 	 * @param from must not be {@literal null}.
@@ -128,7 +128,7 @@ public class Range<T extends Comparable<T>> {
 	 * bound.
 	 *
 	 * @param <T>
-	 * @param to the left {@link Bound}, must not be {@literal null}.
+	 * @param from the left {@link Bound}, must not be {@literal null}.
 	 * @return
 	 * @since 2.2
 	 */
@@ -168,6 +168,7 @@ public class Range<T extends Comparable<T>> {
 	 * @param <T>
 	 * @param value must not be {@literal null}.
 	 * @return
+	 * @see Range#closed(Comparable, Comparable)
 	 */
 	public static <T extends Comparable<T>> Range<T> just(T value) {
 		return Range.closed(value, value);

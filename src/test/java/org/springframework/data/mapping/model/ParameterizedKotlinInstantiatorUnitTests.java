@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.convert;
+package org.springframework.data.mapping.model;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -26,18 +26,16 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PreferredConstructor.Parameter;
 import org.springframework.data.mapping.context.SampleMappingContext;
 import org.springframework.data.mapping.context.SamplePersistentProperty;
-import org.springframework.data.mapping.model.BasicPersistentEntity;
-import org.springframework.data.mapping.model.ParameterValueProvider;
-import org.springframework.data.mapping.model.With32Args;
-import org.springframework.data.mapping.model.With33Args;
 import org.springframework.test.util.ReflectionTestUtils;
 
 /**
- * Unit test to verify correct object instantiation using Kotlin defaulting via {@link KotlinClassGeneratingEntityInstantiator}.
+ * Unit test to verify correct object instantiation using Kotlin defaulting via
+ * {@link KotlinClassGeneratingEntityInstantiator}.
  *
  * @author Mark Paluch
  */
@@ -51,7 +49,9 @@ public class ParameterizedKotlinInstantiatorUnitTests {
 	private final String propertyUnderTestName;
 	private final EntityInstantiator entityInstantiator;
 
-	public ParameterizedKotlinInstantiatorUnitTests(PersistentEntity<Object, SamplePersistentProperty> entity, int propertyCount, int propertyUnderTestIndex, String propertyUnderTestName, EntityInstantiator entityInstantiator, String label) {
+	public ParameterizedKotlinInstantiatorUnitTests(PersistentEntity<Object, SamplePersistentProperty> entity,
+			int propertyCount, int propertyUnderTestIndex, String propertyUnderTestName,
+			EntityInstantiator entityInstantiator, String label) {
 		this.entity = entity;
 		this.propertyCount = propertyCount;
 		this.propertyUnderTestIndex = propertyUnderTestIndex;
@@ -76,13 +76,16 @@ public class ParameterizedKotlinInstantiatorUnitTests {
 		return fixtures;
 	}
 
-	private static List<Object[]> createFixture(SampleMappingContext context, Class<?> entityType, int propertyCount, EntityInstantiator entityInstantiator) {
+	private static List<Object[]> createFixture(SampleMappingContext context, Class<?> entityType, int propertyCount,
+			EntityInstantiator entityInstantiator) {
 
 		BasicPersistentEntity<Object, SamplePersistentProperty> persistentEntity = context.getPersistentEntity(entityType);
 
 		return IntStream.range(0, propertyCount).mapToObj(i -> {
 
-			return new Object[]{persistentEntity, propertyCount, i, Integer.toString(i), entityInstantiator, String.format("Property %d for %s using %s", i, entityType.getSimpleName(), entityInstantiator.getClass().getSimpleName())};
+			return new Object[] { persistentEntity, propertyCount, i, Integer.toString(i), entityInstantiator,
+					String.format("Property %d for %s using %s", i, entityType.getSimpleName(),
+							entityInstantiator.getClass().getSimpleName()) };
 		}).collect(Collectors.toList());
 	}
 

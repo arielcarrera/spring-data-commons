@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,8 @@ package org.springframework.data.repository.cdi;
 import javax.enterprise.inject.se.SeContainer;
 import javax.enterprise.inject.se.SeContainerInitializer;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 
 /**
  * CDI extension integration test using OpenWebbeans.
@@ -27,13 +27,13 @@ import org.junit.BeforeClass;
  * @author Oliver Gierke
  * @author Mark Paluch
  */
-public class WebbeansCdiRepositoryExtensionSupportIntegrationTests
+class WebbeansCdiRepositoryExtensionSupportIntegrationTests
 		extends CdiRepositoryExtensionSupportIntegrationTests {
 
 	private static SeContainer container;
 
-	@BeforeClass
-	public static void setUp() {
+	@BeforeAll
+	static void setUp() {
 
 		container = SeContainerInitializer.newInstance() //
 				.disableDiscovery() //
@@ -46,8 +46,8 @@ public class WebbeansCdiRepositoryExtensionSupportIntegrationTests
 		return container.select(type).get();
 	}
 
-	@AfterClass
-	public static void tearDown() {
+	@AfterAll
+	static void tearDown() {
 		container.close();
 	}
 }

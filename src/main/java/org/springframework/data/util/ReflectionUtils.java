@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the original author or authors.
+ * Copyright 2012-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,14 +15,6 @@
  */
 package org.springframework.data.util;
 
-import kotlin.jvm.JvmClassMappingKt;
-import kotlin.reflect.KCallable;
-import kotlin.reflect.KClass;
-import kotlin.reflect.KFunction;
-import kotlin.reflect.KMutableProperty;
-import kotlin.reflect.KProperty;
-import kotlin.reflect.KType;
-import kotlin.reflect.jvm.ReflectJvmMapping;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.UtilityClass;
@@ -39,6 +31,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.springframework.beans.BeanUtils;
+import org.springframework.core.KotlinDetector;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.annotation.AnnotationUtils;
@@ -58,10 +51,6 @@ import org.springframework.util.ReflectionUtils.FieldFilter;
  */
 @UtilityClass
 public class ReflectionUtils {
-
-	private static final boolean KOTLIN_IS_PRESENT = ClassUtils.isPresent("kotlin.Unit",
-			BeanUtils.class.getClassLoader());
-	private static final int KOTLIN_KIND_CLASS = 1;
 
 	/**
 	 * Creates an instance of the class with the given fully qualified name or returns the given default instance if the
@@ -358,12 +347,11 @@ public class ReflectionUtils {
 	 *
 	 * @return {@literal true} if {@code type} is a Kotlin class.
 	 * @since 2.0
+	 * @deprecated since 2.3, use {@link KotlinDetector#isKotlinType(Class)} instead.
 	 */
+	@Deprecated
 	public static boolean isKotlinClass(Class<?> type) {
-
-		return KOTLIN_IS_PRESENT && Arrays.stream(type.getDeclaredAnnotations()) //
-				.map(Annotation::annotationType) //
-				.anyMatch(annotation -> annotation.getName().equals("kotlin.Metadata"));
+		return KotlinDetector.isKotlinType(type);
 	}
 
 	/**
@@ -372,17 +360,11 @@ public class ReflectionUtils {
 	 *
 	 * @return {@literal true} if {@code type} is a supported Kotlin class.
 	 * @since 2.0
+	 * @deprecated since 2.3, use {@link KotlinReflectionUtils#isSupportedKotlinClass(Class)} instead.
 	 */
+	@Deprecated
 	public static boolean isSupportedKotlinClass(Class<?> type) {
-
-		if (!isKotlinClass(type)) {
-			return false;
-		}
-
-		return Arrays.stream(type.getDeclaredAnnotations()) //
-				.filter(annotation -> annotation.annotationType().getName().equals("kotlin.Metadata")) //
-				.map(annotation -> AnnotationUtils.getValue(annotation, "k")) //
-				.anyMatch(it -> Integer.valueOf(KOTLIN_KIND_CLASS).equals(it));
+		return KotlinReflectionUtils.isSupportedKotlinClass(type);
 	}
 
 	/**
@@ -449,86 +431,4 @@ public class ReflectionUtils {
 		throw new IllegalArgumentException(String.format("Primitive type %s not supported!", type));
 	}
 
-	/**
-	 * Reflection utility methods specific to Kotlin reflection.
-	 */
-	static class KotlinReflectionUtils {
-
-		/**
-		 * Returns {@literal} whether the given {@link MethodParameter} is nullable. Its declaring method can reference a
-		 * Kotlin function, property or interface property.
-		 *
-		 * @return {@literal true} if {@link MethodParameter} is nullable.
-		 * @since 2.0.1
-		 */
-		static boolean isNullable(MethodParameter parameter) {
-
-			Method method = parameter.getMethod();
-
-			if (method == null) {
-				throw new IllegalStateException(String.format("Cannot obtain method from parameter %s!", parameter));
-			}
-
-			KFunction<?> kotlinFunction = ReflectJvmMapping.getKotlinFunction(method);
-
-			if (kotlinFunction == null) {
-
-				// Fallback to own lookup because there's no public Kotlin API for that kind of lookup until
-				// https://youtrack.jetbrains.com/issue/KT-20768 gets resolved.
-				kotlinFunction = findKFunction(method)//
-						.orElseThrow(() -> new IllegalArgumentException(
-								String.format("Cannot resolve %s to a Kotlin function!", parameter)));
-			}
-
-			KType type = parameter.getParameterIndex() == -1 //
-					? kotlinFunction.getReturnType() //
-					: kotlinFunction.getParameters().get(parameter.getParameterIndex() + 1).getType();
-
-			return type.isMarkedNullable();
-		}
-
-		/**
-		 * Lookup a {@link Method} to a {@link KFunction}.
-		 *
-		 * @param method the JVM {@link Method} to look up.
-		 * @return {@link Optional} wrapping a possibly existing {@link KFunction}.
-		 */
-		private static Optional<? extends KFunction<?>> findKFunction(Method method) {
-
-			KClass<?> kotlinClass = JvmClassMappingKt.getKotlinClass(method.getDeclaringClass());
-
-			return kotlinClass.getMembers() //
-					.stream() //
-					.flatMap(KotlinReflectionUtils::toKFunctionStream) //
-					.filter(it -> isSame(it, method)) //
-					.findFirst();
-		}
-
-		private static Stream<? extends KFunction<?>> toKFunctionStream(KCallable<?> it) {
-
-			if (it instanceof KMutableProperty<?>) {
-
-				KMutableProperty<?> property = (KMutableProperty<?>) it;
-				return Stream.of(property.getGetter(), property.getSetter());
-			}
-
-			if (it instanceof KProperty<?>) {
-
-				KProperty<?> property = (KProperty<?>) it;
-				return Stream.of(property.getGetter());
-			}
-
-			if (it instanceof KFunction<?>) {
-				return Stream.of((KFunction<?>) it);
-			}
-
-			return Stream.empty();
-		}
-
-		private static boolean isSame(KFunction<?> function, Method method) {
-
-			Method javaMethod = ReflectJvmMapping.getJavaMethod(function);
-			return javaMethod != null && javaMethod.equals(method);
-		}
-	}
 }

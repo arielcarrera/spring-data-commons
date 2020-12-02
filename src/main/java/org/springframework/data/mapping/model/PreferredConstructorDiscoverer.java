@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,11 +22,13 @@ import kotlin.reflect.jvm.ReflectJvmMapping;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.core.DefaultParameterNameDiscoverer;
 import org.springframework.core.ParameterNameDiscoverer;
+import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.PreferredConstructor;
@@ -102,42 +104,34 @@ public interface PreferredConstructorDiscoverer<T, P extends PersistentProperty<
 			<T, P extends PersistentProperty<P>> PreferredConstructor<T, P> discover(TypeInformation<T> type,
 					@Nullable PersistentEntity<T, P> entity) {
 
-				boolean noArgConstructorFound = false;
-				int numberOfArgConstructors = 0;
 				Class<?> rawOwningType = type.getType();
-				PreferredConstructor<T, P> constructor = null;
 
+				List<Constructor<?>> candidates = new ArrayList<>();
+				Constructor<?> noArg = null;
 				for (Constructor<?> candidate : rawOwningType.getDeclaredConstructors()) {
 
-					PreferredConstructor<T, P> preferredConstructor = buildPreferredConstructor(candidate, type, entity);
-
 					// Synthetic constructors should not be considered
-					if (preferredConstructor.getConstructor().isSynthetic()) {
+					if (candidate.isSynthetic()) {
 						continue;
 					}
 
-					// Explicitly defined constructor trumps all
-					if (preferredConstructor.isExplicitlyAnnotated()) {
-						return preferredConstructor;
+					if (candidate.isAnnotationPresent(PersistenceConstructor.class)) {
+						return buildPreferredConstructor(candidate, type, entity);
 					}
 
-					// No-arg constructor trumps custom ones
-					if (constructor == null || preferredConstructor.isNoArgConstructor()) {
-						constructor = preferredConstructor;
-					}
-
-					if (preferredConstructor.isNoArgConstructor()) {
-						noArgConstructorFound = true;
+					if (candidate.getParameterCount() == 0) {
+						noArg = candidate;
 					} else {
-						numberOfArgConstructors++;
+						candidates.add(candidate);
 					}
 				}
 
-				if (!noArgConstructorFound && numberOfArgConstructors > 1) {
-					constructor = null;
+				if (noArg != null) {
+					return buildPreferredConstructor(noArg, type, entity);
 				}
 
-				return constructor;
+				return candidates.size() > 1 || candidates.isEmpty() ? null
+						: buildPreferredConstructor(candidates.iterator().next(), type, entity);
 			}
 		},
 
@@ -158,9 +152,10 @@ public interface PreferredConstructorDiscoverer<T, P extends PersistentProperty<
 				Class<?> rawOwningType = type.getType();
 
 				return Arrays.stream(rawOwningType.getDeclaredConstructors()) //
+						.filter(it -> !it.isSynthetic()) // Synthetic constructors should not be considered
+						.filter(it -> it.isAnnotationPresent(PersistenceConstructor.class)) // Explicitly defined constructor trumps
+																																								// all
 						.map(it -> buildPreferredConstructor(it, type, entity)) //
-						.filter(it -> !it.getConstructor().isSynthetic()) // Synthetic constructors should not be considered
-						.filter(PreferredConstructor::isExplicitlyAnnotated) // Explicitly defined constructor trumps all
 						.findFirst() //
 						.orElseGet(() -> {
 
@@ -205,12 +200,11 @@ public interface PreferredConstructorDiscoverer<T, P extends PersistentProperty<
 		private static <T, P extends PersistentProperty<P>> PreferredConstructor<T, P> buildPreferredConstructor(
 				Constructor<?> constructor, TypeInformation<T> typeInformation, @Nullable PersistentEntity<T, P> entity) {
 
-			List<TypeInformation<?>> parameterTypes = typeInformation.getParameterTypes(constructor);
-
-			if (parameterTypes.isEmpty()) {
+			if (constructor.getParameterCount() == 0) {
 				return new PreferredConstructor<>((Constructor<T>) constructor);
 			}
 
+			List<TypeInformation<?>> parameterTypes = typeInformation.getParameterTypes(constructor);
 			String[] parameterNames = PARAMETER_NAME_DISCOVERER.getParameterNames(constructor);
 
 			Parameter<Object, P>[] parameters = new Parameter[parameterTypes.size()];

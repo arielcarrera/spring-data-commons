@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 the original author or authors.
+ * Copyright 2017-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
+import org.springframework.instrument.classloading.ShadowingClassLoader;
 import org.springframework.util.Assert;
 
 /**
@@ -40,7 +41,7 @@ public class HidingClassLoader extends ShadowingClassLoader {
 
 	HidingClassLoader(Collection<String> hidden) {
 
-		super(URLClassLoader.getSystemClassLoader());
+		super(URLClassLoader.getSystemClassLoader(), false);
 
 		this.hidden = hidden;
 	}
@@ -69,6 +70,15 @@ public class HidingClassLoader extends ShadowingClassLoader {
 
 		checkIfHidden(name);
 		return super.loadClass(name);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.classloadersupport.ShadowingClassLoader#isEligibleForShadowing(java.lang.String)
+	 */
+	@Override
+	protected boolean isEligibleForShadowing(String className) {
+		return isExcluded(className);
 	}
 
 	/*

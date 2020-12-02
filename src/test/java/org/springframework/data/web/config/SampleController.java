@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2019 the original author or authors.
+ * Copyright 2015-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,10 +31,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
  * @author Oliver Gierke
  */
 @Controller
-public class SampleController {
+class SampleController {
 
 	@RequestMapping("/proxy")
-	public String someMethod(SampleDto sampleDto) {
+	String someMethod(SampleDto sampleDto) {
 
 		assertThat(sampleDto).isNotNull();
 		assertThat(sampleDto.getName()).isEqualTo("Foo");

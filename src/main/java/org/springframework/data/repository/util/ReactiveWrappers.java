@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,18 +18,14 @@ package org.springframework.data.repository.util;
 import lombok.experimental.UtilityClass;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import rx.Completable;
-import rx.Observable;
-import rx.Single;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
-import org.reactivestreams.Publisher;
+import org.springframework.core.ReactiveAdapter;
+import org.springframework.core.ReactiveAdapterRegistry;
 import org.springframework.core.ReactiveTypeDescriptor;
 import org.springframework.data.util.ProxyUtils;
 import org.springframework.data.util.ReflectionUtils;
@@ -46,6 +42,7 @@ import org.springframework.util.ClassUtils;
  * @author Mark Paluch
  * @author Christoph Strobl
  * @author Oliver Gierke
+ * @author Gerrit Meier
  * @since 2.0
  * @see org.reactivestreams.Publisher
  * @see rx.Single
@@ -71,49 +68,18 @@ public class ReactiveWrappers {
 	private static final boolean RXJAVA2_PRESENT = ClassUtils.isPresent("io.reactivex.Flowable",
 			ReactiveWrappers.class.getClassLoader());
 
-	private static final Collection<ReactiveTypeDescriptor> REACTIVE_WRAPPERS;
+	private static final boolean KOTLIN_COROUTINES_PRESENT = ClassUtils.isPresent("kotlinx.coroutines.flow.Flow",
+			ReactiveWrappers.class.getClassLoader())
+			&& ClassUtils.isPresent("kotlinx.coroutines.reactive.ReactiveFlowKt", ReactiveWrappers.class.getClassLoader())
+			&& ClassUtils.isPresent("kotlinx.coroutines.reactor.ReactorFlowKt", ReactiveWrappers.class.getClassLoader());
 
 	/**
 	 * Enumeration of supported reactive libraries.
 	 *
 	 * @author Mark Paluch
 	 */
-	static enum ReactiveLibrary {
-		PROJECT_REACTOR, RXJAVA1, RXJAVA2;
-	}
-
-	static {
-
-		Collection<ReactiveTypeDescriptor> reactiveWrappers = new ArrayList<>(5);
-
-		if (RXJAVA1_PRESENT) {
-
-			reactiveWrappers.add(ReactiveTypeDescriptor.singleRequiredValue(Single.class));
-			reactiveWrappers.add(ReactiveTypeDescriptor.noValue(Completable.class, Completable::complete));
-			reactiveWrappers.add(ReactiveTypeDescriptor.multiValue(Observable.class, Observable::empty));
-		}
-
-		if (RXJAVA2_PRESENT) {
-
-			reactiveWrappers.add(ReactiveTypeDescriptor.singleRequiredValue(io.reactivex.Single.class));
-			reactiveWrappers
-					.add(ReactiveTypeDescriptor.singleOptionalValue(io.reactivex.Maybe.class, io.reactivex.Maybe::empty));
-			reactiveWrappers
-					.add(ReactiveTypeDescriptor.noValue(io.reactivex.Completable.class, io.reactivex.Completable::complete));
-			reactiveWrappers
-					.add(ReactiveTypeDescriptor.multiValue(io.reactivex.Flowable.class, io.reactivex.Flowable::empty));
-			reactiveWrappers
-					.add(ReactiveTypeDescriptor.multiValue(io.reactivex.Observable.class, io.reactivex.Observable::empty));
-		}
-
-		if (PROJECT_REACTOR_PRESENT) {
-
-			reactiveWrappers.add(ReactiveTypeDescriptor.singleOptionalValue(Mono.class, Mono::empty));
-			reactiveWrappers.add(ReactiveTypeDescriptor.multiValue(Flux.class, Flux::empty));
-			reactiveWrappers.add(ReactiveTypeDescriptor.multiValue(Publisher.class, Flux::empty));
-		}
-
-		REACTIVE_WRAPPERS = Collections.unmodifiableCollection(reactiveWrappers);
+	public enum ReactiveLibrary {
+		PROJECT_REACTOR, RXJAVA1, RXJAVA2, KOTLIN_COROUTINES;
 	}
 
 	/**
@@ -143,6 +109,8 @@ public class ReactiveWrappers {
 				return RXJAVA1_PRESENT;
 			case RXJAVA2:
 				return RXJAVA2_PRESENT;
+			case KOTLIN_COROUTINES:
+				return PROJECT_REACTOR_PRESENT && KOTLIN_COROUTINES_PRESENT;
 			default:
 				throw new IllegalArgumentException(String.format("Reactive library %s not supported", reactiveLibrary));
 		}
@@ -155,7 +123,7 @@ public class ReactiveWrappers {
 	 * @return {@literal true} if the {@code type} is a supported reactive wrapper type.
 	 */
 	public static boolean supports(Class<?> type) {
-		return isWrapper(ProxyUtils.getUserClass(type));
+		return isAvailable() && isWrapper(ProxyUtils.getUserClass(type));
 	}
 
 	/**
@@ -221,38 +189,33 @@ public class ReactiveWrappers {
 	 * Returns a collection of no-value wrapper types.
 	 *
 	 * @return a collection of no-value wrapper types.
+	 * @deprecated not supported anymore.
 	 */
+	@Deprecated
 	public static Collection<Class<?>> getNoValueTypes() {
-
-		return REACTIVE_WRAPPERS.stream()//
-				.filter(ReactiveTypeDescriptor::isNoValue)//
-				.map(ReactiveTypeDescriptor::getReactiveType)//
-				.collect(Collectors.toList());
+		return Collections.emptyList();
 	}
 
 	/**
 	 * Returns a collection of single-value wrapper types.
 	 *
 	 * @return a collection of single-value wrapper types.
+	 * @deprecated not supported anymore.
 	 */
+	@Deprecated
 	public static Collection<Class<?>> getSingleValueTypes() {
-
-		return REACTIVE_WRAPPERS.stream()//
-				.filter(entry -> !entry.isMultiValue())//
-				.map(ReactiveTypeDescriptor::getReactiveType).collect(Collectors.toList());
+		return Collections.emptyList();
 	}
 
 	/**
 	 * Returns a collection of multi-value wrapper types.
 	 *
 	 * @return a collection of multi-value wrapper types.
+	 * @deprecated not supported anymore.
 	 */
+	@Deprecated
 	public static Collection<Class<?>> getMultiValueTypes() {
-
-		return REACTIVE_WRAPPERS.stream()//
-				.filter(ReactiveTypeDescriptor::isMultiValue)//
-				.map(ReactiveTypeDescriptor::getReactiveType)//
-				.collect(Collectors.toList());
+		return Collections.emptyList();
 	}
 
 	/**
@@ -278,8 +241,17 @@ public class ReactiveWrappers {
 
 		Assert.notNull(type, "Wrapper type must not be null!");
 
-		return REACTIVE_WRAPPERS.stream()//
-				.filter(it -> ClassUtils.isAssignable(it.getReactiveType(), type))//
-				.findFirst();
+		ReactiveAdapterRegistry adapterRegistry = ReactiveWrapperConverters.RegistryHolder.REACTIVE_ADAPTER_REGISTRY;
+
+		if (adapterRegistry == null) {
+			return Optional.empty();
+		}
+
+		ReactiveAdapter adapter = adapterRegistry.getAdapter(type);
+		if (adapter != null && adapter.getDescriptor().isDeferred()) {
+			return Optional.of(adapter.getDescriptor());
+		}
+
+		return Optional.empty();
 	}
 }

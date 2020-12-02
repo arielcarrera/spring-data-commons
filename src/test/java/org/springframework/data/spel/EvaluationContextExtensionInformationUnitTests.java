@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 the original author or authors.
+ * Copyright 2017-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ package org.springframework.data.spel;
 
 import java.util.Optional;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.data.spel.spi.EvaluationContextExtension;
 
 /**
@@ -25,10 +25,10 @@ import org.springframework.data.spel.spi.EvaluationContextExtension;
  *
  * @author Oliver Gierke
  */
-public class EvaluationContextExtensionInformationUnitTests {
+class EvaluationContextExtensionInformationUnitTests {
 
 	@Test // DATACMNS-1024
-	public void supportsMethodOverloadsOnRoot() {
+	void supportsMethodOverloadsOnRoot() {
 
 		EvaluationContextExtensionInformation information = new EvaluationContextExtensionInformation(
 				SampleExtension.class);

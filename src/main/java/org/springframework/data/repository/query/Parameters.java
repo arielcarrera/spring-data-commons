@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2019 the original author or authors.
+ * Copyright 2008-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,7 +48,8 @@ public abstract class Parameters<S extends Parameters<S, T>, T extends Parameter
 			"Either use @%s on all parameters except %s and %s typed once, or none at all!", Param.class.getSimpleName(),
 			Pageable.class.getSimpleName(), Sort.class.getSimpleName());
 
-	private final ParameterNameDiscoverer discoverer = new DefaultParameterNameDiscoverer();
+	private static final ParameterNameDiscoverer PARAMETER_NAME_DISCOVERER = new DefaultParameterNameDiscoverer();
+
 	private final int pageableIndex;
 	private final int sortIndex;
 	private final List<T> parameters;
@@ -65,18 +66,18 @@ public abstract class Parameters<S extends Parameters<S, T>, T extends Parameter
 
 		Assert.notNull(method, "Method must not be null!");
 
-		List<Class<?>> types = Arrays.asList(method.getParameterTypes());
+		int parameterCount = method.getParameterCount();
 
-		this.parameters = new ArrayList<>(types.size());
+		this.parameters = new ArrayList<>(parameterCount);
 		this.dynamicProjectionIndex = -1;
 
 		int pageableIndex = -1;
 		int sortIndex = -1;
 
-		for (int i = 0; i < types.size(); i++) {
+		for (int i = 0; i < parameterCount; i++) {
 
 			MethodParameter methodParameter = new MethodParameter(method, i);
-			methodParameter.initParameterNameDiscovery(discoverer);
+			methodParameter.initParameterNameDiscovery(PARAMETER_NAME_DISCOVERER);
 
 			T parameter = createParameter(methodParameter);
 

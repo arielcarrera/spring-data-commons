@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,23 +16,29 @@
 package org.springframework.data.repository.core.support;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-import org.junit.Test;
-import org.springframework.data.repository.core.support.TransactionalRepositoryProxyPostProcessor.CustomAnnotationTransactionAttributeSource;
+import org.junit.jupiter.api.Test;
+import org.springframework.data.repository.core.RepositoryInformation;
+import org.springframework.data.repository.core.support.TransactionalRepositoryProxyPostProcessor.RepositoryAnnotationTransactionAttributeSource;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAttribute;
 
 /**
- * Unit tests for {@link CustomAnnotationTransactionAttributeSource}.
+ * Unit tests for {@link RepositoryAnnotationTransactionAttributeSource}.
  *
  * @author Oliver Gierke
+ * @author Mark Paluch
  */
-public class CustomAnnotationTransactionAttributeSourceUnitTests {
+class RepositoryInformationPreferringAnnotationTransactionAttributeSourceUnitTests {
 
 	@Test
-	public void usesCustomTransactionConfigurationOnInterface() throws SecurityException, NoSuchMethodException {
+	void usesCustomTransactionConfigurationOnInterface() throws Exception {
 
-		CustomAnnotationTransactionAttributeSource source = new TransactionalRepositoryProxyPostProcessor.CustomAnnotationTransactionAttributeSource();
+		RepositoryInformation information = mock(RepositoryInformation.class);
+
+		RepositoryAnnotationTransactionAttributeSource source = new RepositoryAnnotationTransactionAttributeSource(
+				information, true);
 
 		TransactionAttribute attribute = source.getTransactionAttribute(Bar.class.getMethod("bar", Object.class),
 				FooImpl.class);

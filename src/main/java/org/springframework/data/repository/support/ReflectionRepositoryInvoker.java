@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -178,8 +178,8 @@ class ReflectionRepositoryInvoker implements RepositoryInvoker {
 	 * @see org.springframework.data.rest.core.invoke.RepositoryInvoker#invokeQueryMethod(java.lang.reflect.Method, java.util.Map, org.springframework.data.domain.Pageable, org.springframework.data.domain.Sort)
 	 */
 	@Override
-	public Optional<Object> invokeQueryMethod(Method method, MultiValueMap<String, ? extends Object> parameters,
-			Pageable pageable, Sort sort) {
+	public Optional<Object> invokeQueryMethod(Method method, MultiValueMap<String, ?> parameters, Pageable pageable,
+			Sort sort) {
 
 		Assert.notNull(method, "Method must not be null!");
 		Assert.notNull(parameters, "Parameters must not be null!");
@@ -191,8 +191,8 @@ class ReflectionRepositoryInvoker implements RepositoryInvoker {
 		return returnAsOptional(invoke(method, prepareParameters(method, parameters, pageable, sort)));
 	}
 
-	private Object[] prepareParameters(Method method, MultiValueMap<String, ? extends Object> rawParameters,
-			Pageable pageable, Sort sort) {
+	private Object[] prepareParameters(Method method, MultiValueMap<String, ?> rawParameters, Pageable pageable,
+			Sort sort) {
 
 		List<MethodParameter> parameters = new MethodParameters(method, Optional.of(PARAM_ANNOTATION)).getParameters();
 
@@ -286,6 +286,10 @@ class ReflectionRepositoryInvoker implements RepositoryInvoker {
 
 		Assert.notNull(id, "Id must not be null!");
 
+		if (idType.isInstance(id)) {
+			return id;
+		}
+
 		Object result = conversionService.convert(id, idType);
 
 		if (result == null) {
@@ -300,11 +304,12 @@ class ReflectionRepositoryInvoker implements RepositoryInvoker {
 
 		Method method = methods.getFindAllMethod()
 				.orElseThrow(() -> new IllegalStateException("Repository doesn't have a find-all-method declared!"));
-		Class<?>[] types = method.getParameterTypes();
 
-		if (types.length == 0) {
+		if (method.getParameterCount() == 0) {
 			return invokeForNonNullResult(method);
 		}
+
+		Class<?>[] types = method.getParameterTypes();
 
 		if (Pageable.class.isAssignableFrom(types[0])) {
 			return invokeForNonNullResult(method, pageable);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2019 the original author or authors.
+ * Copyright 2008-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,18 +22,22 @@ import static org.mockito.Mockito.*;
 import java.lang.reflect.Method;
 import java.util.Optional;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.aop.framework.Advised;
+import org.springframework.aop.framework.AopProxyUtils;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.convert.TypeDescriptor;
+import org.springframework.core.convert.support.ConfigurableConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.core.support.DummyRepositoryFactoryBean;
@@ -47,8 +51,9 @@ import org.springframework.web.bind.annotation.ModelAttribute;
  * @author Oliver Gierke
  * @author Thomas Darimont
  */
-@RunWith(MockitoJUnitRunner.Silent.class)
-public class DomainClassConverterUnitTests {
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
+class DomainClassConverterUnitTests {
 
 	static final User USER = new User();
 	static final TypeDescriptor STRING_TYPE = TypeDescriptor.valueOf(String.class);
@@ -60,14 +65,14 @@ public class DomainClassConverterUnitTests {
 
 	@Mock DefaultConversionService service;
 
-	@Before
+	@BeforeEach
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public void setUp() {
+	void setUp() {
 		converter = new DomainClassConverter(service);
 	}
 
 	@Test
-	public void matchFailsIfNoDaoAvailable() throws Exception {
+	void matchFailsIfNoDaoAvailable() {
 
 		GenericApplicationContext ctx = new GenericApplicationContext();
 		ctx.refresh();
@@ -76,7 +81,7 @@ public class DomainClassConverterUnitTests {
 	}
 
 	@Test
-	public void matchesIfConversionInBetweenIsPossible() throws Exception {
+	void matchesIfConversionInBetweenIsPossible() {
 
 		converter.setApplicationContext(initContextWithRepo());
 
@@ -86,7 +91,7 @@ public class DomainClassConverterUnitTests {
 	}
 
 	@Test
-	public void matchFailsIfNoIntermediateConversionIsPossible() throws Exception {
+	void matchFailsIfNoIntermediateConversionIsPossible() {
 
 		converter.setApplicationContext(initContextWithRepo());
 
@@ -95,23 +100,18 @@ public class DomainClassConverterUnitTests {
 		assertMatches(false);
 	}
 
-	// DATACMNS-233
-	public void returnsNullForNullSource() {
+	@Test // DATACMNS-233
+	void returnsNullForNullSource() {
 		assertThat(converter.convert(null, STRING_TYPE, USER_TYPE)).isNull();
 	}
 
-	// DATACMNS-233
-	public void returnsNullForEmptyStringSource() {
+	@Test // DATACMNS-233
+	void returnsNullForEmptyStringSource() {
 		assertThat(converter.convert("", STRING_TYPE, USER_TYPE)).isNull();
 	}
 
-	private void assertMatches(boolean matchExpected) {
-
-		assertThat(converter.matches(STRING_TYPE, USER_TYPE)).isEqualTo(matchExpected);
-	}
-
 	@Test
-	public void convertsStringToUserCorrectly() throws Exception {
+	void convertsStringToUserCorrectly() throws Exception {
 
 		ApplicationContext context = initContextWithRepo();
 		converter.setApplicationContext(context);
@@ -127,7 +127,7 @@ public class DomainClassConverterUnitTests {
 	}
 
 	@Test // DATACMNS-133
-	public void discoversFactoryAndRepoFromParentApplicationContext() {
+	void discoversFactoryAndRepoFromParentApplicationContext() {
 
 		ApplicationContext parent = initContextWithRepo();
 		GenericApplicationContext context = new GenericApplicationContext(parent);
@@ -140,7 +140,7 @@ public class DomainClassConverterUnitTests {
 	}
 
 	@Test // DATACMNS-583
-	public void converterDoesntMatchIfTargetTypeIsAssignableFromSource() {
+	void converterDoesntMatchIfTargetTypeIsAssignableFromSource() {
 
 		converter.setApplicationContext(initContextWithRepo());
 
@@ -149,7 +149,7 @@ public class DomainClassConverterUnitTests {
 	}
 
 	@Test // DATACMNS-627
-	public void supportsConversionFromIdType() {
+	void supportsConversionFromIdType() {
 
 		converter.setApplicationContext(initContextWithRepo());
 
@@ -157,7 +157,7 @@ public class DomainClassConverterUnitTests {
 	}
 
 	@Test // DATACMNS-627
-	public void supportsConversionFromEntityToIdType() {
+	void supportsConversionFromEntityToIdType() {
 
 		converter.setApplicationContext(initContextWithRepo());
 
@@ -165,7 +165,7 @@ public class DomainClassConverterUnitTests {
 	}
 
 	@Test // DATACMNS-627
-	public void supportsConversionFromEntityToString() {
+	void supportsConversionFromEntityToString() {
 
 		converter.setApplicationContext(initContextWithRepo());
 
@@ -174,9 +174,10 @@ public class DomainClassConverterUnitTests {
 	}
 
 	@Test // DATACMNS-683
-	public void toIdConverterDoesNotMatchIfTargetTypeIsAssignableFromSource() throws Exception {
+	void toIdConverterDoesNotMatchIfTargetTypeIsAssignableFromSource() throws NoSuchMethodException {
 
 		converter.setApplicationContext(initContextWithRepo());
+		assertMatches(false);
 
 		@SuppressWarnings("rawtypes")
 		Optional<ToIdConverter> toIdConverter = (Optional<ToIdConverter>) ReflectionTestUtils.getField(converter,
@@ -186,6 +187,33 @@ public class DomainClassConverterUnitTests {
 		TypeDescriptor target = TypeDescriptor.nested(new MethodParameter(method, 0), 0);
 
 		assertThat(toIdConverter).map(it -> it.matches(SUB_USER_TYPE, target)).hasValue(false);
+	}
+
+	@Test // DATACMNS-1743
+	void registersConvertersOnConversionService() {
+
+		ConfigurableConversionService conversionService = new DefaultConversionService();
+		DomainClassConverter<?> converter = new DomainClassConverter<>(conversionService);
+		converter.setApplicationContext(initContextWithRepo());
+
+		assertThat(conversionService.canConvert(String.class, User.class)).isTrue();
+	}
+
+	@Test // DATACMNS-1743
+	void returnsNullForFailedLookup() {
+
+		ApplicationContext context = initContextWithRepo();
+		converter.setApplicationContext(context);
+
+		// Expect ID conversion
+		doReturn(4711L).when(service).convert("4711", Long.class);
+
+		// Configure aggregate lookup to fail
+		UserRepository users = context.getBean(UserRepository.class);
+		users = (UserRepository) AopProxyUtils.getSingletonTarget(users);
+		doReturn(Optional.empty()).when(users).findById(any());
+
+		assertThat(converter.convert("4711", STRING_TYPE, USER_TYPE)).isNull();
 	}
 
 	private ApplicationContext initContextWithRepo() {
@@ -199,6 +227,10 @@ public class DomainClassConverterUnitTests {
 		GenericApplicationContext ctx = new GenericApplicationContext(factory);
 		ctx.refresh();
 		return ctx;
+	}
+
+	private void assertMatches(boolean matchExpected) {
+		assertThat(converter.matches(STRING_TYPE, USER_TYPE)).isEqualTo(matchExpected);
 	}
 
 	static interface Wrapper {

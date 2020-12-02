@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2019 the original author or authors.
+ * Copyright 2014-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.util.Optional;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.stereotype.Component;
 
 /**
@@ -27,20 +27,20 @@ import org.springframework.stereotype.Component;
  *
  * @author Oliver Gierke
  */
-public class AnnotationAttributeUnitTests {
+class AnnotationAttributeUnitTests {
 
 	@Test // DATACMNS-607
-	public void rejectsNullAnnotationType() {
+	void rejectsNullAnnotationType() {
 		assertThatIllegalArgumentException().isThrownBy(() -> new AnnotationAttribute(null));
 	}
 
 	@Test // DATACMNS-607
-	public void rejectsNullAnnotationTypeForAnnotationAndAttributeName() {
+	void rejectsNullAnnotationTypeForAnnotationAndAttributeName() {
 		assertThatIllegalArgumentException().isThrownBy(() -> new AnnotationAttribute(null, Optional.of("name")));
 	}
 
 	@Test // DATACMNS-607
-	public void looksUpAttributeFromAnnotatedElement() {
+	void looksUpAttributeFromAnnotatedElement() {
 
 		AnnotationAttribute attribute = new AnnotationAttribute(Component.class);
 		assertThat(attribute.getValueFrom(Sample.class)).hasValue("foo");

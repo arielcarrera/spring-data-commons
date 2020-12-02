@@ -5,19 +5,19 @@
 
 	<groupId>com.github.arielcarrera.data</groupId>
 	<artifactId>spring-data-commons-cdi</artifactId>
-	<version>2.2.1.CDI.1</version>
+	<version>2.3.2.CDI.1</version>
 
 	<name>Spring Data Core (CDI)</name>
 
 	<parent>
 		<groupId>org.springframework.data.build</groupId>
 		<artifactId>spring-data-parent</artifactId>
-		<version>2.2.1.RELEASE</version>
+		<version>2.3.2.RELEASE</version>
 	</parent>
 
 	<properties>
 		<javaslang>2.0.6</javaslang>
-		<vavr>0.10.2</vavr>
+		<vavr>0.10.3</vavr>
 		<scala>2.11.7</scala>
 		<xmlbeam>1.4.16</xmlbeam>
 
@@ -266,8 +266,27 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.jetbrains.kotlinx</groupId>
+			<artifactId>kotlinx-coroutines-core</artifactId>
+			<optional>true</optional>
+		</dependency>
+
+		<dependency>
+			<groupId>org.jetbrains.kotlinx</groupId>
+			<artifactId>kotlinx-coroutines-reactive</artifactId>
+			<optional>true</optional>
+		</dependency>
+
+		<dependency>
+			<groupId>org.jetbrains.kotlinx</groupId>
+			<artifactId>kotlinx-coroutines-reactor</artifactId>
+			<optional>true</optional>
+		</dependency>
+
+		<dependency>
 			<groupId>org.jetbrains.kotlin</groupId>
-			<artifactId>kotlin-test</artifactId>
+			<artifactId>kotlin-test-junit5</artifactId>
+			<version>${kotlin}</version>
 			<scope>test</scope>
 		</dependency>
 
@@ -318,45 +337,24 @@
 
 	<build>
 		<plugins>
-
-			<plugin>
-				<groupId>com.mysema.maven</groupId>
-				<artifactId>apt-maven-plugin</artifactId>
-				<version>${apt}</version>
-				<executions>
-					<execution>
-						<phase>generate-test-sources</phase>
-						<goals>
-							<goal>test-process</goal>
-						</goals>
-						<configuration>
-							<outputDirectory>${project.build.directory}/generated-test-sources/test-annotations</outputDirectory>
-							<processor>com.querydsl.apt.QuerydslAnnotationProcessor</processor>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-enforcer-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>enforce-rules</id>
-						<goals>
-							<goal>enforce</goal>
-						</goals>
-					</execution>
-				</executions>
+				<artifactId>maven-compiler-plugin</artifactId>
 				<configuration>
-					<rules>
-						<requireJavaVersion>
-							<version>[1.8,1.9)</version>
-						</requireJavaVersion>
-					</rules>
+					<annotationProcessors>
+						<annotationProcessor>
+							lombok.launch.AnnotationProcessorHider$AnnotationProcessor
+						</annotationProcessor>
+						<annotationProcessor>
+							lombok.launch.AnnotationProcessorHider$ClaimingProcessor
+						</annotationProcessor>
+						<annotationProcessor>
+							com.querydsl.apt.QuerydslAnnotationProcessor
+						</annotationProcessor>
+					</annotationProcessors>
+
 				</configuration>
 			</plugin>
-
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-assembly-plugin</artifactId>

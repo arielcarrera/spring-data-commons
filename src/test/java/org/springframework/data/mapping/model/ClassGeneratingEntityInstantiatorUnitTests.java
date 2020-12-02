@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2019 the original author or authors.
+ * Copyright 2014-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.convert;
+package org.springframework.data.mapping.model;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.util.ClassTypeInformation.from;
 
@@ -24,21 +25,20 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.IntStream;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
+
 import org.springframework.data.classloadersupport.HidingClassLoader;
-import org.springframework.data.convert.ClassGeneratingEntityInstantiator.ObjectInstantiator;
-import org.springframework.data.convert.ClassGeneratingEntityInstantiatorUnitTests.Outer.Inner;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.PreferredConstructor;
 import org.springframework.data.mapping.PreferredConstructor.Parameter;
-import org.springframework.data.mapping.model.BasicPersistentEntity;
-import org.springframework.data.mapping.model.MappingInstantiationException;
-import org.springframework.data.mapping.model.ParameterValueProvider;
-import org.springframework.data.mapping.model.PreferredConstructorDiscoverer;
+import org.springframework.data.mapping.model.ClassGeneratingEntityInstantiator.ObjectInstantiator;
+import org.springframework.data.mapping.model.ClassGeneratingEntityInstantiatorUnitTests.Outer.Inner;
 import org.springframework.util.ReflectionUtils;
 
 /**
@@ -48,8 +48,9 @@ import org.springframework.util.ReflectionUtils;
  * @author Oliver Gierke
  * @author Mark Paluch
  */
-@RunWith(MockitoJUnitRunner.class)
-public class ClassGeneratingEntityInstantiatorUnitTests<P extends PersistentProperty<P>> {
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
+class ClassGeneratingEntityInstantiatorUnitTests<P extends PersistentProperty<P>> {
 
 	ClassGeneratingEntityInstantiator instance = new ClassGeneratingEntityInstantiator();
 
@@ -57,7 +58,7 @@ public class ClassGeneratingEntityInstantiatorUnitTests<P extends PersistentProp
 	@Mock ParameterValueProvider<P> provider;
 
 	@Test
-	public void instantiatesSimpleObjectCorrectly() {
+	void instantiatesSimpleObjectCorrectly() {
 
 		doReturn(Object.class).when(entity).getType();
 
@@ -65,7 +66,7 @@ public class ClassGeneratingEntityInstantiatorUnitTests<P extends PersistentProp
 	}
 
 	@Test
-	public void instantiatesArrayCorrectly() {
+	void instantiatesArrayCorrectly() {
 
 		doReturn(String[][].class).when(entity).getType();
 
@@ -73,7 +74,7 @@ public class ClassGeneratingEntityInstantiatorUnitTests<P extends PersistentProp
 	}
 
 	@Test // DATACMNS-1126
-	public void instantiatesTypeWithPreferredConstructorUsingParameterValueProvider() {
+	void instantiatesTypeWithPreferredConstructorUsingParameterValueProvider() {
 
 		PreferredConstructor<Foo, P> constructor = PreferredConstructorDiscoverer.discover(Foo.class);
 
@@ -88,7 +89,7 @@ public class ClassGeneratingEntityInstantiatorUnitTests<P extends PersistentProp
 
 	@Test // DATACMNS-300, DATACMNS-578
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public void throwsExceptionOnBeanInstantiationException() {
+	void throwsExceptionOnBeanInstantiationException() {
 
 		doReturn(PersistentEntity.class).when(entity).getType();
 
@@ -97,7 +98,7 @@ public class ClassGeneratingEntityInstantiatorUnitTests<P extends PersistentProp
 	}
 
 	@Test // DATACMNS-134, DATACMNS-578
-	public void createsInnerClassInstanceCorrectly() {
+	void createsInnerClassInstanceCorrectly() {
 
 		BasicPersistentEntity<Inner, P> entity = new BasicPersistentEntity<>(from(Inner.class));
 		assertThat(entity.getPersistenceConstructor()).satisfies(constructor -> {
@@ -123,7 +124,7 @@ public class ClassGeneratingEntityInstantiatorUnitTests<P extends PersistentProp
 
 	@Test // DATACMNS-283, DATACMNS-578
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public void capturesContextOnInstantiationException() throws Exception {
+	void capturesContextOnInstantiationException() throws Exception {
 
 		PersistentEntity<Sample, P> entity = new BasicPersistentEntity<>(from(Sample.class));
 
@@ -152,7 +153,7 @@ public class ClassGeneratingEntityInstantiatorUnitTests<P extends PersistentProp
 
 	@Test // DATACMNS-1175
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public void createsInstancesWithRecursionAndSameCtorArgCountCorrectly() {
+	void createsInstancesWithRecursionAndSameCtorArgCountCorrectly() {
 
 		PersistentEntity<SampleWithReference, P> outer = new BasicPersistentEntity<>(from(SampleWithReference.class));
 		PersistentEntity<Sample, P> inner = new BasicPersistentEntity<>(from(Sample.class));
@@ -185,7 +186,7 @@ public class ClassGeneratingEntityInstantiatorUnitTests<P extends PersistentProp
 	}
 
 	@Test // DATACMNS-578, DATACMNS-1126
-	public void instantiateObjCtorDefault() {
+	void instantiateObjCtorDefault() {
 
 		doReturn(ObjCtorDefault.class).when(entity).getType();
 		doReturn(PreferredConstructorDiscoverer.discover(ObjCtorDefault.class))//
@@ -196,7 +197,7 @@ public class ClassGeneratingEntityInstantiatorUnitTests<P extends PersistentProp
 	}
 
 	@Test // DATACMNS-578, DATACMNS-1126
-	public void instantiateObjCtorNoArgs() {
+	void instantiateObjCtorNoArgs() {
 
 		doReturn(ObjCtorNoArgs.class).when(entity).getType();
 		doReturn(PreferredConstructorDiscoverer.discover(ObjCtorNoArgs.class))//
@@ -212,7 +213,7 @@ public class ClassGeneratingEntityInstantiatorUnitTests<P extends PersistentProp
 	}
 
 	@Test // DATACMNS-578, DATACMNS-1126
-	public void instantiateObjCtor1ParamString() {
+	void instantiateObjCtor1ParamString() {
 
 		doReturn(ObjCtor1ParamString.class).when(entity).getType();
 		doReturn(PreferredConstructorDiscoverer.discover(ObjCtor1ParamString.class))//
@@ -230,7 +231,7 @@ public class ClassGeneratingEntityInstantiatorUnitTests<P extends PersistentProp
 	}
 
 	@Test // DATACMNS-578, DATACMNS-1126
-	public void instantiateObjCtor2ParamStringString() {
+	void instantiateObjCtor2ParamStringString() {
 
 		doReturn(ObjCtor2ParamStringString.class).when(entity).getType();
 		doReturn(PreferredConstructorDiscoverer.discover(ObjCtor2ParamStringString.class))//
@@ -250,7 +251,7 @@ public class ClassGeneratingEntityInstantiatorUnitTests<P extends PersistentProp
 	}
 
 	@Test // DATACMNS-578, DATACMNS-1126
-	public void instantiateObjectCtor1ParamInt() {
+	void instantiateObjectCtor1ParamInt() {
 
 		doReturn(ObjectCtor1ParamInt.class).when(entity).getType();
 		doReturn(PreferredConstructorDiscoverer.discover(ObjectCtor1ParamInt.class))//
@@ -268,7 +269,7 @@ public class ClassGeneratingEntityInstantiatorUnitTests<P extends PersistentProp
 	}
 
 	@Test // DATACMNS-1200
-	public void instantiateObjectCtor1ParamIntWithoutValue() {
+	void instantiateObjectCtor1ParamIntWithoutValue() {
 
 		doReturn(ObjectCtor1ParamInt.class).when(entity).getType();
 		doReturn(PreferredConstructorDiscoverer.discover(ObjectCtor1ParamInt.class))//
@@ -280,7 +281,7 @@ public class ClassGeneratingEntityInstantiatorUnitTests<P extends PersistentProp
 
 	@Test // DATACMNS-578, DATACMNS-1126
 	@SuppressWarnings("unchecked")
-	public void instantiateObjectCtor7ParamsString5IntsString() {
+	void instantiateObjectCtor7ParamsString5IntsString() {
 
 		doReturn(ObjectCtor7ParamsString5IntsString.class).when(entity).getType();
 		doReturn(PreferredConstructorDiscoverer.discover(ObjectCtor7ParamsString5IntsString.class))//
@@ -307,7 +308,7 @@ public class ClassGeneratingEntityInstantiatorUnitTests<P extends PersistentProp
 	}
 
 	@Test // DATACMNS-1373
-	public void shouldInstantiateProtectedInnerClass() {
+	void shouldInstantiateProtectedInnerClass() {
 
 		prepareMocks(ProtectedInnerClass.class);
 
@@ -316,7 +317,7 @@ public class ClassGeneratingEntityInstantiatorUnitTests<P extends PersistentProp
 	}
 
 	@Test // DATACMNS-1373
-	public void shouldInstantiatePackagePrivateInnerClass() {
+	void shouldInstantiatePackagePrivateInnerClass() {
 
 		prepareMocks(PackagePrivateInnerClass.class);
 
@@ -325,7 +326,7 @@ public class ClassGeneratingEntityInstantiatorUnitTests<P extends PersistentProp
 	}
 
 	@Test // DATACMNS-1373
-	public void shouldNotInstantiatePrivateInnerClass() {
+	void shouldNotInstantiatePrivateInnerClass() {
 
 		prepareMocks(PrivateInnerClass.class);
 
@@ -333,7 +334,7 @@ public class ClassGeneratingEntityInstantiatorUnitTests<P extends PersistentProp
 	}
 
 	@Test // DATACMNS-1373
-	public void shouldInstantiateClassWithPackagePrivateConstructor() {
+	void shouldInstantiateClassWithPackagePrivateConstructor() {
 
 		prepareMocks(ClassWithPackagePrivateConstructor.class);
 
@@ -342,7 +343,7 @@ public class ClassGeneratingEntityInstantiatorUnitTests<P extends PersistentProp
 	}
 
 	@Test // DATACMNS-1373
-	public void shouldInstantiateClassInDefaultPackage() throws ClassNotFoundException {
+	void shouldInstantiateClassInDefaultPackage() throws ClassNotFoundException {
 
 		Class<?> typeInDefaultPackage = Class.forName("TypeInDefaultPackage");
 		prepareMocks(typeInDefaultPackage);
@@ -352,7 +353,7 @@ public class ClassGeneratingEntityInstantiatorUnitTests<P extends PersistentProp
 	}
 
 	@Test // DATACMNS-1373
-	public void shouldNotInstantiateClassWithPrivateConstructor() {
+	void shouldNotInstantiateClassWithPrivateConstructor() {
 
 		prepareMocks(ClassWithPrivateConstructor.class);
 
@@ -360,14 +361,13 @@ public class ClassGeneratingEntityInstantiatorUnitTests<P extends PersistentProp
 	}
 
 	@Test // DATACMNS-1422
-	public void shouldUseReflectionIfFrameworkTypesNotVisible() throws Exception {
+	void shouldUseReflectionIfFrameworkTypesNotVisible() throws Exception {
 
 		HidingClassLoader classLoader = HidingClassLoader.hide(ObjectInstantiator.class);
-		classLoader.excludePackage("org.springframework.data.mapping.model");
+		classLoader.excludePackage("org.springframework.data.mapping");
 
 		// require type from different package to meet visibility quirks
-		Class<?> entityType = classLoader
-				.loadClass("org.springframework.data.mapping.model.PersistentPropertyAccessorTests$ClassLoaderTest");
+		Class<?> entityType = classLoader.loadClass("org.springframework.data.mapping.Person");
 
 		prepareMocks(entityType);
 
