@@ -107,9 +107,13 @@ public class FragmentMetadata {
 		interfacesSet.add(cls);
 		Class<?> ic = null;
 		try {
-			ic = Class.forName(cls);
+			ic = Thread.currentThread().getContextClassLoader().loadClass(cls);
 		} catch (ClassNotFoundException e) {
-			LOGGER.warn(String.format(CLASS_LOADING_ERROR, cls), e);
+			try {
+				ic = Class.forName(cls);
+			} catch (ClassNotFoundException e2) {
+				LOGGER.warn(String.format(CLASS_LOADING_ERROR, cls), e2);
+			}
 		}
 		for (final Class<?> clazz : ic.getInterfaces()) {
 			String clazzName = clazz.getName();

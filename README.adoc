@@ -1,3 +1,33 @@
+== Spring Data Commons for CDI
+
+Distribution of Spring Data Commons with minimal changes for better CDI integration.
+
+== Maven repository
+
+			   <repository>
+			     <id>github</id>
+			     <name>GitHub OWNER Apache Maven Packages</name>
+			     <url>https://maven.pkg.github.com/arielcarrera/spring-data-commons-cdi</url>
+			   </repository>
+
+== Maven dependencies
+
+		<dependency>
+			<groupId>com.github.arielcarrera.data</groupId>
+			<artifactId>spring-data-commons-cdi</artifactId>
+			<version>2.2.1.CDI.1</version>
+		</dependency>
+		
+== Compile
+
+		mvn clean install
+		
+== Deploy package to Github Packages
+
+		mvn clean deploy -P github
+  
+
+
 = Spring Data Commons image:https://jenkins.spring.io/buildStatus/icon?job=spring-data-commons%2Fmaster&subject=Build[link=https://jenkins.spring.io/view/SpringData/job/spring-data-commons/] https://gitter.im/spring-projects/spring-data[image:https://badges.gitter.im/spring-projects/spring-data.svg[Gitter]]
 
 https://projects.spring.io/spring-data/[Spring Data Commons] is part of the umbrella Spring Data project that provides shared infrastructure across the Spring Data projects. It contains technology neutral repository interfaces as well as a metadata model for persisting Java classes.
